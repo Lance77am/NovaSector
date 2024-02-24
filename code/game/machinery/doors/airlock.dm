@@ -54,7 +54,7 @@
 // "Would this be better with a global var"
 
 // Wires for the airlock are located in the datum folder, inside the wires datum folder.
-// NOVA EDIT REMOVAL START - moved to code/__DEFINES/~skyrat_defines/airlock.dm
+// NOVA EDIT REMOVAL START - moved to code/__DEFINES/~nova_defines/airlock.dm
 /*
 #define AIRLOCK_FRAME_CLOSED "closed"
 #define AIRLOCK_FRAME_CLOSING "closing"
@@ -82,7 +82,7 @@
 
 #define DOOR_VISION_DISTANCE 11 ///The maximum distance a door will see out to
 */
-// NOVA EDIT REMOVAL END - moved to code/__DEFINES/~skyrat_defines/airlock.dm
+// NOVA EDIT REMOVAL END - moved to code/__DEFINES/~nova_defines/airlock.dm
 
 /obj/machinery/door/airlock
 	name = "Airlock"
@@ -146,9 +146,9 @@
 	var/previous_airlock = /obj/structure/door_assembly
 	/// Material of inner filling; if its an airlock with glass, this should be set to "glass"
 	var/airlock_material
-	var/overlays_file = 'icons/obj/doors/airlocks/station/overlays.dmi' //OVERRIDEN IN SKYRAT AESTHETICS - SEE MODULE
+	var/overlays_file = 'icons/obj/doors/airlocks/station/overlays.dmi' //OVERRIDEN IN NOVA AESTHETICS - SEE MODULE
 	/// Used for papers and photos pinned to the airlock
-	var/note_overlay_file = 'icons/obj/doors/airlocks/station/overlays.dmi'//OVERRIDEN IN SKYRAT AESTHETICS - SEE MODULE
+	var/note_overlay_file = 'icons/obj/doors/airlocks/station/overlays.dmi'//OVERRIDEN IN NOVA AESTHETICS - SEE MODULE
 
 	var/cyclelinkeddir = 0
 	var/obj/machinery/door/airlock/cyclelinkedairlock
@@ -308,9 +308,6 @@
 		for(var/obj/machinery/door/airlock/otherlock as anything in close_others)
 			otherlock.close_others -= src
 		close_others.Cut()
-	if(id_tag)
-		for(var/obj/machinery/door_buttons/D as anything in SSmachines.get_machines_by_type_and_subtypes(/obj/machinery/door_buttons))
-			D.removeMe(src)
 	QDEL_NULL(note)
 	QDEL_NULL(seal)
 	for(var/datum/atom_hud/data/diagnostic/diag_hud in GLOB.huds)
@@ -1530,38 +1527,32 @@
 	assembly.update_name()
 	assembly.update_appearance()
 
-/obj/machinery/door/airlock/deconstruct(disassembled = TRUE, mob/user)
-	if(!(obj_flags & NO_DECONSTRUCTION))
-		var/obj/structure/door_assembly/A
-		if(assemblytype)
-			A = new assemblytype(loc)
-		else
-			A = new /obj/structure/door_assembly(loc)
-			//If you come across a null assemblytype, it will produce the default assembly instead of disintegrating.
-		prepare_deconstruction_assembly(A)
+/obj/machinery/door/airlock/on_deconstruction(disassembled)
+	var/obj/structure/door_assembly/A
+	if(assemblytype)
+		A = new assemblytype(loc)
+	else
+		A = new /obj/structure/door_assembly(loc)
+		//If you come across a null assemblytype, it will produce the default assembly instead of disintegrating.
+	prepare_deconstruction_assembly(A)
 
-		if(!disassembled)
-			A?.update_integrity(A.max_integrity * 0.5)
-		else if(obj_flags & EMAGGED)
-			if(user)
-				to_chat(user, span_warning("You discard the damaged electronics."))
-		else
-			if(user)
-				to_chat(user, span_notice("You remove the airlock electronics."))
-
-			var/obj/item/electronics/airlock/ae
-			if(!electronics)
-				ae = new/obj/item/electronics/airlock(loc)
-				if(length(req_one_access))
-					ae.one_access = 1
-					ae.accesses = req_one_access
-				else
-					ae.accesses = req_access
+	if(!disassembled)
+		A?.update_integrity(A.max_integrity * 0.5)
+	else if(obj_flags & EMAGGED)
+		//no electronics nothing
+	else
+		var/obj/item/electronics/airlock/ae
+		if(!electronics)
+			ae = new/obj/item/electronics/airlock(loc)
+			if(length(req_one_access))
+				ae.one_access = 1
+				ae.accesses = req_one_access
 			else
-				ae = electronics
-				electronics = null
-				ae.forceMove(drop_location())
-	qdel(src)
+				ae.accesses = req_access
+		else
+			ae = electronics
+			electronics = null
+			ae.forceMove(drop_location())
 
 /obj/machinery/door/airlock/rcd_vals(mob/user, obj/item/construction/rcd/the_rcd)
 	switch(the_rcd.mode)
@@ -1822,6 +1813,7 @@
 /obj/machinery/door/airlock/security
 	name = "security airlock"
 	icon = 'icons/obj/doors/airlocks/station/security.dmi'
+	var/id = null
 	assemblytype = /obj/structure/door_assembly/door_assembly_sec
 	normal_integrity = 450
 
@@ -2481,7 +2473,7 @@
 	set_density(TRUE)
 	operating = FALSE
 	return TRUE
-// NOVA EDIT REMOVAL START - moved to code/__DEFINES/~skyrat_defines/airlock.dm
+// NOVA EDIT REMOVAL START - moved to code/__DEFINES/~nova_defines/airlock.dm
 /*
 #undef AIRLOCK_SECURITY_NONE
 #undef AIRLOCK_SECURITY_IRON
@@ -2508,4 +2500,4 @@
 #undef AIRLOCK_FRAME_OPEN
 #undef AIRLOCK_FRAME_OPENING
 */
-// NOVA EDIT REMOVAL END - moved to code/__DEFINES/~skyrat_defines/airlock.dm
+// NOVA EDIT REMOVAL END - moved to code/__DEFINES/~nova_defines/airlock.dm
