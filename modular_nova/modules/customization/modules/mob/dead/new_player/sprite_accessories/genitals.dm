@@ -9,7 +9,7 @@
 	var/genital_location = GROIN
 
 /datum/sprite_accessory/genital/is_hidden(mob/living/carbon/human/target_mob)
-	var/obj/item/organ/external/genital/badonkers = target_mob.get_organ_slot(associated_organ_slot)
+	var/obj/item/organ/genital/badonkers = target_mob?.get_organ_slot(associated_organ_slot)
 	if(!badonkers)
 		return TRUE
 	switch(badonkers.visibility_preference)
@@ -25,7 +25,7 @@
 
 			//Are they wearing an Undershirt?
 			if(target_mob.undershirt != "Nude" && !(target_mob.underwear_visibility & UNDERWEAR_HIDE_SHIRT))
-				var/datum/sprite_accessory/undershirt/worn_undershirt = GLOB.undershirt_list[target_mob.undershirt]
+				var/datum/sprite_accessory/undershirt/worn_undershirt = SSaccessories.undershirt_list[target_mob.undershirt]
 				//Does this Undershirt cover a relevant slot?
 				if(genital_location == CHEST) //(Undershirt always covers chest)
 					return TRUE
@@ -35,7 +35,7 @@
 
 			//Undershirt didn't cover them, are they wearing Underwear?
 			if(target_mob.underwear != "Nude" && !(target_mob.underwear_visibility & UNDERWEAR_HIDE_UNDIES))
-				var/datum/sprite_accessory/underwear/worn_underwear = GLOB.underwear_list[target_mob.underwear]
+				var/datum/sprite_accessory/underwear/worn_underwear = SSaccessories.underwear_list[target_mob.underwear]
 				//Does this Underwear cover a relevant slot?
 				if(genital_location == GROIN) //(Underwear always covers groin)
 					return TRUE
@@ -57,16 +57,15 @@
 
 /datum/sprite_accessory/genital/penis
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/genitals/penis_onmob.dmi'
-	organ_type = /obj/item/organ/external/genital/penis
+	organ_type = /obj/item/organ/genital/penis
 	associated_organ_slot = ORGAN_SLOT_PENIS
 	key = ORGAN_SLOT_PENIS
 	color_src = USE_MATRIXED_COLORS
 	always_color_customizable = TRUE
 	center = TRUE
-	special_icon_case = TRUE
 	special_x_dimension = TRUE
 	//default_color = DEFAULT_SKIN_OR_PRIMARY //This is the price we're paying for sheaths
-	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_LAYER)
+	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_UNDER_CLOTHES)
 	genetic = TRUE
 	var/can_have_sheath = TRUE
 
@@ -88,7 +87,7 @@
 
 /datum/sprite_accessory/genital/penis/none
 	icon_state = "none"
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	factual = FALSE
 	color_src = null
 
@@ -134,14 +133,13 @@
 
 /datum/sprite_accessory/genital/testicles
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/genitals/testicles_onmob.dmi'
-	organ_type = /obj/item/organ/external/genital/testicles
+	organ_type = /obj/item/organ/genital/testicles
 	associated_organ_slot = ORGAN_SLOT_TESTICLES
 	key = ORGAN_SLOT_TESTICLES
 	always_color_customizable = TRUE
-	special_icon_case = TRUE
 	special_x_dimension = TRUE
 	default_color = DEFAULT_SKIN_OR_PRIMARY
-	relevent_layers = list(BODY_ADJ_LAYER, BODY_BEHIND_LAYER)
+	relevent_layers = list(BODY_FRONT_LAYER, BODY_BEHIND_LAYER)
 	genetic = TRUE
 	var/has_size = TRUE
 
@@ -163,7 +161,7 @@
 
 /datum/sprite_accessory/genital/testicles/none
 	icon_state = "none"
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	factual = FALSE
 	color_src = null
 
@@ -180,18 +178,18 @@
 
 /datum/sprite_accessory/genital/vagina
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/genitals/vagina_onmob.dmi'
-	organ_type = /obj/item/organ/external/genital/vagina
+	organ_type = /obj/item/organ/genital/vagina
 	associated_organ_slot = ORGAN_SLOT_VAGINA
 	key = ORGAN_SLOT_VAGINA
 	always_color_customizable = TRUE
 	default_color = "#FFCCCC"
-	relevent_layers = list(BODY_FRONT_LAYER)
+	relevent_layers = list(BODY_FRONT_UNDER_CLOTHES)
 	genetic = TRUE
 	var/alt_aroused = TRUE
 
 /datum/sprite_accessory/genital/vagina/none
+	name = SPRITE_ACCESSORY_NONE
 	icon_state = "none"
-	name = "None"
 	factual = FALSE
 	color_src = null
 
@@ -231,14 +229,14 @@
 	name = "Cloaca"
 
 /datum/sprite_accessory/genital/womb
-	organ_type = /obj/item/organ/external/genital/womb
+	organ_type = /obj/item/organ/genital/womb
 	associated_organ_slot = ORGAN_SLOT_WOMB
 	key = ORGAN_SLOT_WOMB
 	genetic = TRUE
 
 /datum/sprite_accessory/genital/womb/none
 	icon_state = "none"
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	factual = FALSE
 	color_src = null
 
@@ -248,14 +246,14 @@
 	color_src = null
 
 /datum/sprite_accessory/genital/anus
-	organ_type = /obj/item/organ/external/genital/anus
+	organ_type = /obj/item/organ/genital/anus
 	associated_organ_slot = ORGAN_SLOT_ANUS
 	key = ORGAN_SLOT_ANUS
 	genetic = TRUE
 
 /datum/sprite_accessory/genital/anus/none
 	icon_state = "none"
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	factual = FALSE
 	color_src = null
 
@@ -266,19 +264,19 @@
 
 /datum/sprite_accessory/genital/breasts
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/genitals/breasts_onmob.dmi'
-	organ_type = /obj/item/organ/external/genital/breasts
+	organ_type = /obj/item/organ/genital/breasts
 	associated_organ_slot = ORGAN_SLOT_BREASTS
 	key = ORGAN_SLOT_BREASTS
 	always_color_customizable = TRUE
 	default_color = DEFAULT_SKIN_OR_PRIMARY
-	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_LAYER)
+	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_UNDER_CLOTHES)
 	has_skintone_shading = TRUE
 	genital_location = CHEST
 	genetic = TRUE
 
 /datum/sprite_accessory/genital/breasts/none
 	icon_state = "none"
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	factual = FALSE
 	color_src = null
 

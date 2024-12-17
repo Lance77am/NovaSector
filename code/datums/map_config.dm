@@ -50,6 +50,8 @@
 	var/job_changes = list()
 	/// List of additional areas that count as a part of the library
 	var/library_areas = list()
+	/// Boolean - if TRUE, the "Up" and "Down" traits are automatically distributed to the map's z-levels. If FALSE; they're set via JSON.
+	var/height_autosetup = TRUE
 
 	/// List of unit tests that are skipped when running this map
 	var/list/skipped_tests
@@ -160,9 +162,9 @@
 		log_world("map_config shuttles is not a list!")
 		return
 
-// NOVA ADD BEGIN - EMERGENCY SHUTTLE OVERRIDE
+	// NOVA ADD BEGIN - EMERGENCY SHUTTLE OVERRIDE
 	shuttles["emergency"] = "emergency_nova"
-// NOVA ADD END
+	// NOVA ADD END
 
 	traits = json["traits"]
 	// "traits": [{"Linkage": "Cross"}, {"Space Ruins": true}]
@@ -197,6 +199,11 @@
 	if ("planetary" in json)
 		planetary = json["planetary"]
 
+	// NOVA EDIT ADDITION START - Planetary maps with space access.
+	if ("allow_space_when_planetary" in json)
+		allow_space_when_planetary = json["allow_space_when_planetary"]
+	// NOVA EDIT END
+
 	if ("blacklist_file" in json)
 		blacklist_file = json["blacklist_file"]
 
@@ -221,6 +228,9 @@
 				stack_trace("Invalid path in mapping config for additional library areas: \[[path_as_text]\]")
 				continue
 			library_areas += path
+
+	if ("height_autosetup" in json)
+		height_autosetup = json["height_autosetup"]
 
 #ifdef UNIT_TESTS
 	// Check for unit tests to skip, no reason to check these if we're not running tests

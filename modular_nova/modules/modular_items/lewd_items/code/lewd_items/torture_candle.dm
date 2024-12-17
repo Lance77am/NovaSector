@@ -44,7 +44,7 @@
 /obj/item/bdsm_candle/proc/check_menu(mob/living/user)
 	if(!istype(user))
 		return FALSE
-	if(user.incapacitated())
+	if(user.incapacitated)
 		return FALSE
 	return TRUE
 
@@ -108,23 +108,24 @@
 	open_flame()
 	update_brightness()
 
-/obj/item/bdsm_candle/AltClick(mob/user)
-	. = ..()
+/obj/item/bdsm_candle/click_alt(mob/user)
 	if(!lit)
 		if(color_changed)
-			return
+			return CLICK_ACTION_BLOCKING
 		var/choice = show_radial_menu(user, src, candle_designs, custom_check = CALLBACK(src, PROC_REF(check_menu), user), radius = 36, require_near = TRUE)
 		if(!choice)
-			return FALSE
+			return CLICK_ACTION_BLOCKING
 		current_color = choice
 		light_color = candlelights[choice]
 		update_icon()
 		update_brightness()
 		color_changed = TRUE
+		return CLICK_ACTION_SUCCESS
 	else
 		if(!put_out_candle())
-			return
+			return CLICK_ACTION_BLOCKING
 		user.visible_message(span_notice("[user] snuffs [src]."))
+		return CLICK_ACTION_SUCCESS
 
 /*
 *	WAX DROPPING
@@ -146,8 +147,8 @@
 	switch(user.zone_selected) //to let code know what part of body we gonna wax
 		if(BODY_ZONE_PRECISE_GROIN)
 			targeted_somewhere = TRUE
-			var/obj/item/organ/external/genital/penis = attacked.get_organ_slot(ORGAN_SLOT_PENIS)
-			var/obj/item/organ/external/genital/vagina = attacked.get_organ_slot(ORGAN_SLOT_VAGINA)
+			var/obj/item/organ/genital/penis = attacked.get_organ_slot(ORGAN_SLOT_PENIS)
+			var/obj/item/organ/genital/vagina = attacked.get_organ_slot(ORGAN_SLOT_VAGINA)
 			if((vagina && penis) && (attacked.is_bottomless() || vagina.visibility_preference == GENITAL_ALWAYS_SHOW && penis.visibility_preference == GENITAL_ALWAYS_SHOW))
 				message = (user == attacked) ? pick("drips some wax on [attacked.p_their()] genitals, moaning in pleasure",
 											"drips some wax on [attacked.p_them()]self, moaning in pleasure as it reaches [attacked.p_their()] genitals") : pick(
@@ -179,7 +180,7 @@
 
 		if(BODY_ZONE_CHEST)
 			targeted_somewhere = TRUE
-			var/obj/item/organ/external/genital/breasts = attacked.get_organ_slot(ORGAN_SLOT_BREASTS)
+			var/obj/item/organ/genital/breasts = attacked.get_organ_slot(ORGAN_SLOT_BREASTS)
 			if(attacked.is_topless() || breasts.visibility_preference == GENITAL_ALWAYS_SHOW)
 				var/breasts_or_nipples = breasts ? ORGAN_SLOT_BREASTS : ORGAN_SLOT_NIPPLES
 				message = (user == attacked) ? pick("drips some wax on [attacked.p_their()] [breasts_or_nipples], releasing all [attacked.p_their()] lustness", "drips some wax right on [attacked.p_their()] [breasts ? "tits" : "chest"], making [attacked.p_their()] feel faint.") : pick("pours the wax that is slowly dripping from [src] onto [attacked]'s [breasts_or_nipples], [attacked.p_they()] shows pure enjoyment.", "tilts the candle. Right in the moment when wax drips on [attacked]'s [breasts_or_nipples], [attacked.p_they()] shivers", "tilts the candle. Just when hot drops of wax fell on [attacked]'s [breasts_or_nipples], [attacked.p_they()] quietly moans in pleasure")
@@ -196,7 +197,7 @@
 		if(prob(50))
 			attacked.try_lewd_autoemote(pick("twitch_s" , "gasp", "shiver"))
 	user.visible_message(span_purple("[user] [message]!"))
-	play_lewd_sound(loc, pick('modular_nova/modules/modular_items/lewd_items/sounds/vax1.ogg',
+	playsound_if_pref(loc, pick('modular_nova/modules/modular_items/lewd_items/sounds/vax1.ogg',
 						'modular_nova/modules/modular_items/lewd_items/sounds/vax2.ogg'), 70, TRUE)
 
 #undef CANDLE_LUMINOSITY

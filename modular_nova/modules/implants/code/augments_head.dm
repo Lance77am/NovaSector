@@ -1,19 +1,18 @@
 #define HACKERMAN_DECK_TEMPERATURE_INCREASE 450
+#define HACKERMAN_DECK_EMP_TEMPERATURE_INCREASE 2250
 
 #define HACKING_FORENSICS_SUCCESS_MESSAGE "Damages reported by the internal diagnostics system suggest a digital attack by a wireless hacking implant."
 
 // An implant that injects you with twitch on demand, acting like a bootleg sandevistan
 
-/obj/item/organ/internal/cyberimp/sensory_enhancer
+/obj/item/organ/cyberimp/sensory_enhancer
 	name = "\improper Qani-Laaca sensory computer"
 	desc = "An experimental implant replacing the spine of organics. When activated, it can give a temporary boost to mental processing speed, \
 		Which many users percieve as a slowing of time and quickening of their ability to act. Due to its nature, it is incompatible with \
-		system that heavily influence the user's nervous system, like the central nervous system rebooter. \
-		As a bonus effect, you are immune to the burst of heart damage that comes at the end of twitch usage, as the computer is able to regulate \
-		your heart's rhythm back to normal after its use."
+		systems that heavily influence the user's nervous system, like the central nervous system rebooter."
 	icon = 'modular_nova/modules/implants/icons/implants.dmi'
 	icon_state = "sandy"
-	slot = ORGAN_SLOT_BRAIN_ANTISTUN
+	slot = ORGAN_SLOT_BRAIN_CNS
 	zone = BODY_ZONE_HEAD
 	implant_overlay = null
 	implant_color = null
@@ -22,32 +21,35 @@
 		/datum/action/cooldown/sensory_enhancer/overcharge,
 	)
 	w_class = WEIGHT_CLASS_SMALL
-	/// The bodypart overlay datum we should apply to whatever mob we are put into
-	var/datum/bodypart_overlay/simple/sensory_enhancer/bodypart_overlay
+	/// The bodypart overlay datum we should apply to whatever mob we are put into.
+	/// TODO: Refactor this to be used as a mutant bodypart_overlay instead.
+	var/datum/bodypart_overlay/simple/sensory_enhancer/simple_bodypart_overlay
 
-/obj/item/organ/internal/cyberimp/sensory_enhancer/on_mob_insert(mob/living/carbon/organ_owner, special, movement_flags)
+/obj/item/organ/cyberimp/sensory_enhancer/proc/vomit_blood()
+	owner.spray_blood(owner.dir, 2)
+	owner.emote("cough")
+	owner.visible_message(
+		span_danger("[owner] suddenly coughs up a mouthful of blood, clutching at their chest!"),
+		span_danger("You feel your chest seize up, a worrying amount of blood flying out of your mouth as you cough uncontrollably.")
+	)
+
+/obj/item/organ/cyberimp/sensory_enhancer/on_bodypart_insert(obj/item/bodypart/limb, movement_flags)
 	. = ..()
-	ADD_TRAIT(organ_owner, TRAIT_TWITCH_ADAPTED, TRAIT_NARCOTICS)
+	if(isteshari(owner))
+		return
+	simple_bodypart_overlay = new()
+	limb.add_bodypart_overlay(simple_bodypart_overlay)
+	owner?.update_body_parts()
 
-/obj/item/organ/internal/cyberimp/sensory_enhancer/on_mob_remove(mob/living/carbon/organ_owner, special)
+/obj/item/organ/cyberimp/sensory_enhancer/on_mob_remove(mob/living/carbon/organ_owner, special)
 	. = ..()
-	REMOVE_TRAIT(organ_owner, TRAIT_TWITCH_ADAPTED, TRAIT_NARCOTICS)
+	bodypart_owner?.remove_bodypart_overlay(simple_bodypart_overlay)
+	QDEL_NULL(simple_bodypart_overlay)
+	organ_owner.update_body_parts()
 
-/obj/item/organ/internal/cyberimp/sensory_enhancer/on_bodypart_insert(obj/item/bodypart/limb, movement_flags)
-	if(isteshari(owner))
-		return ..()
-	bodypart_overlay = new()
-	limb.add_bodypart_overlay(bodypart_overlay)
-	owner.update_body_parts()
-	return ..()
-
-/obj/item/organ/internal/cyberimp/sensory_enhancer/on_bodypart_remove(obj/item/bodypart/limb, movement_flags)
-	if(isteshari(owner))
-		return ..()
-	limb.remove_bodypart_overlay(bodypart_overlay)
-	QDEL_NULL(bodypart_overlay)
-	owner.update_body_parts()
-	return ..()
+/obj/item/autosurgeon/syndicate/sandy
+	name = "\improper Qani-Laaca sensory computer autosurgeon"
+	starting_organ = /obj/item/organ/cyberimp/sensory_enhancer
 
 /datum/bodypart_overlay/simple/sensory_enhancer
 	icon = 'modular_nova/modules/implants/icons/implants_onmob.dmi'
@@ -95,7 +97,7 @@
 
 /obj/item/qani_laaca_telegraph/Initialize(mapload)
 	. = ..()
-	AddElement(/datum/element/shatters_when_thrown, /obj/effect/decal/cleanable/glass, 1, SFX_SHATTER)
+	AddElement(/datum/element/can_shatter, /obj/effect/decal/cleanable/glass, 1, SFX_SHATTER)
 	transform = transform.Scale(0.75, 0.75)
 
 /datum/action/cooldown/sensory_enhancer/overcharge
@@ -105,9 +107,23 @@
 	button_icon_state = "sandy_overcharge"
 	injection_amount = 20
 
+/obj/item/organ/cyberimp/sensory_enhancer/emp_act(severity)
+	. = ..()
+	if(!owner || . & EMP_PROTECT_SELF)
+		return
+	var/mob/living/carbon/human/human_owner = owner
+
+	to_chat(owner, span_warning("Sensory overload! Your body can't handle this much neural input!"))
+
+	human_owner.Knockdown(6 SECONDS)
+	human_owner.Stun(4 SECONDS)
+	human_owner.do_jitter_animation(18 SECONDS)
+	human_owner.blood_volume -= 90
+	addtimer(CALLBACK(src, PROC_REF(vomit_blood)), 3 SECONDS)
+
 // Hackerman deck, lets you emag or doorjack things (NO CYBORGS) within a short range of yourself
 
-/obj/item/organ/internal/cyberimp/hackerman_deck
+/obj/item/organ/cyberimp/hackerman_deck
 	name = "\improper Binyat wireless hacking system"
 	desc = "A rare-to-find neural chip that allows its user to interface with nearby machinery \
 		and effect it in (usually) beneficial ways. Due to the rudimentary connection, fine manipulation \
@@ -115,30 +131,30 @@
 		hacking for you. Due to their complexity, the system does not appear to work on cyborgs."
 	icon = 'modular_nova/modules/implants/icons/implants.dmi'
 	icon_state = "hackerman"
-	slot = ORGAN_SLOT_BRAIN_ANTISTUN
+	slot = ORGAN_SLOT_BRAIN_CNS
 	zone = BODY_ZONE_HEAD
 	implant_overlay = null
 	implant_color = null
 	actions_types = list(/datum/action/cooldown/spell/pointed/hackerman_deck)
 	w_class = WEIGHT_CLASS_SMALL
-	/// The bodypart overlay datum we should apply to whatever mob we are put into
-	var/datum/bodypart_overlay/simple/hackerman/bodypart_overlay
+	/// The bodypart overlay datum we should apply to whatever mob we are put into.
+	/// TODO: Refactor this to be used as a mutant bodypart_overlay instead.
+	var/datum/bodypart_overlay/simple/hackerman/simple_bodypart_overlay
 
-/obj/item/organ/internal/cyberimp/hackerman_deck/on_bodypart_insert(obj/item/bodypart/limb, movement_flags)
+/obj/item/organ/cyberimp/hackerman_deck/on_bodypart_insert(obj/item/bodypart/limb, movement_flags)
+	. = ..()
 	if(isteshari(owner))
-		return ..()
-	bodypart_overlay = new()
-	limb.add_bodypart_overlay(bodypart_overlay)
-	owner.update_body_parts()
-	return ..()
+		return
+	simple_bodypart_overlay = new()
+	limb.add_bodypart_overlay(simple_bodypart_overlay)
+	owner?.update_body_parts()
 
-/obj/item/organ/internal/cyberimp/hackerman_deck/on_bodypart_remove(obj/item/bodypart/limb, movement_flags)
-	if(isteshari(owner))
-		return ..()
-	limb.remove_bodypart_overlay(bodypart_overlay)
-	QDEL_NULL(bodypart_overlay)
-	owner.update_body_parts()
-	return ..()
+/obj/item/organ/cyberimp/hackerman_deck/on_mob_remove(mob/living/carbon/organ_owner, special)
+	. = ..()
+	bodypart_owner?.remove_bodypart_overlay(simple_bodypart_overlay)
+	QDEL_NULL(simple_bodypart_overlay)
+	organ_owner.update_body_parts()
+
 
 /datum/bodypart_overlay/simple/hackerman
 	icon = 'modular_nova/modules/implants/icons/implants_onmob.dmi'
@@ -161,13 +177,13 @@
 	ranged_mousepointer = 'icons/effects/mouse_pointers/override_machine_target.dmi'
 	/// What we don't work on, will always not work on mobs because I know what you are
 	var/static/list/emag_blacklist = list(
-		/obj/machinery/shieldgen,
+		/obj/machinery/satellite/meteor_shield,
 		/obj/machinery/computer/communications,
 		/obj/machinery/computer/arcade,
 		/obj/machinery/computer/holodeck,
 		/obj/machinery/computer/emergency_shuttle,
 		/obj/machinery/recycler,
-		/obj/item/organ/internal/cyberimp/arm/armblade,
+		/obj/item/organ/cyberimp/arm/armblade,
 	)
 	/// How far away we can hack things
 	var/hack_range = 2
@@ -210,14 +226,26 @@
 	cast_on.forensics?.add_hacking_implant_trace()
 	cast_on.add_hiddenprint(owner)
 
-	playsound(cast_on, 'sound/machines/terminal_processing.ogg', 15, TRUE)
+	playsound(cast_on, 'sound/machines/terminal/terminal_processing.ogg', 15, TRUE)
 
 	var/mob/living/carbon/human/human_owner = owner
 
 	human_owner.adjust_bodytemperature(HACKERMAN_DECK_TEMPERATURE_INCREASE)
+
+/obj/item/organ/cyberimp/hackerman_deck/emp_act(severity)
+	. = ..()
+	if(!owner || . & EMP_PROTECT_SELF)
+		return
+	var/mob/living/carbon/human/human_owner = owner
+
+	human_owner.adjust_bodytemperature(HACKERMAN_DECK_EMP_TEMPERATURE_INCREASE)
+	human_owner.adjust_fire_stacks(2)
+	human_owner.ignite_mob()
+	to_chat(owner, span_warning("You can feel the implant in your head malfunction and begin to severely overheat!"))
 
 /// Adds an item to the list of fibers for this forensics datum that tells on the fact someone used a hacking implant here
 /datum/forensics/proc/add_hacking_implant_trace()
 	LAZYSET(fibers, HACKING_FORENSICS_SUCCESS_MESSAGE, HACKING_FORENSICS_SUCCESS_MESSAGE)
 
 #undef HACKERMAN_DECK_TEMPERATURE_INCREASE
+#undef HACKERMAN_DECK_EMP_TEMPERATURE_INCREASE

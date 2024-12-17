@@ -5,8 +5,8 @@ import { Component } from 'react';
 
 import { useBackend } from '../backend';
 import { Button, KeyListener, Stack } from '../components';
-import { BodyZone, BodyZoneSelector } from '../components/BodyZoneSelector';
 import { Window } from '../layouts';
+import { BodyZone, BodyZoneSelector } from './common/BodyZoneSelector';
 
 type Surgery = {
   name: string;
@@ -20,7 +20,8 @@ type SurgeryInitiatorData = {
   target_name: string;
 };
 
-const sortSurgeries = sortBy((surgery: Surgery) => surgery.name);
+const sortSurgeries = (array: Surgery[]) =>
+  sortBy(array, (surgery) => surgery.name);
 
 type SurgeryInitiatorInnerState = {
   selectedSurgeryIndex: number;
@@ -97,8 +98,8 @@ class SurgeryInitiatorInner extends Component<
                     selected={index === this.state.selectedSurgeryIndex}
                     tooltip={
                       surgery.blocked
-                        ? surgery.blocked_reason ??
-                          'That surgery is unavailable!'
+                        ? (surgery.blocked_reason ??
+                          'That surgery is unavailable!')
                         : undefined
                     } // NOVA EDIT - ORIGINAL: tooltip={surgery.blocked ? "Their body is covered!" : undefined}
                     key={surgery.name}

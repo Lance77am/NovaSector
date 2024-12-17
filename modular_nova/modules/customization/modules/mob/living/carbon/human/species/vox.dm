@@ -2,7 +2,6 @@
 	// Bird-like humanoids
 	name = "Vox"
 	id = SPECIES_VOX
-	eyes_icon = 'modular_nova/modules/organs/icons/vox_eyes.dmi'
 	can_augment = FALSE
 	inherent_traits = list(
 		TRAIT_ADVANCEDTOOLUSER,
@@ -11,9 +10,9 @@
 		TRAIT_MUTANT_COLORS,
 	)
 	inherent_biotypes = MOB_ORGANIC|MOB_HUMANOID
-	mutanttongue = /obj/item/organ/internal/tongue/vox
-	mutantlungs = /obj/item/organ/internal/lungs/nitrogen/vox
-	mutantbrain = /obj/item/organ/internal/brain/vox
+	mutanttongue = /obj/item/organ/tongue/vox
+	mutantlungs = /obj/item/organ/lungs/nitrogen/vox
+	mutantbrain = /obj/item/organ/brain/vox
 	breathid = "n2"
 	mutant_bodyparts = list()
 	payday_modifier = 1.0
@@ -59,17 +58,6 @@
 		equipping.equipOutfit(job.vox_outfit, visuals_only)
 	else
 		give_important_for_life(equipping)
-
-/datum/species/vox/random_name(gender,unique,lastname)
-	if(unique)
-		return random_unique_vox_name()
-
-	var/randname = vox_name()
-
-	if(lastname)
-		randname += " [lastname]"
-
-	return randname
 
 /datum/species/vox/randomize_features()
 	var/list/features = ..()

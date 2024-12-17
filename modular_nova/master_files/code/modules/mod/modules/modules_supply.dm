@@ -1,8 +1,8 @@
-/obj/item/mod/module/hydraulic/on_suit_activation()
+/obj/item/mod/module/hydraulic/on_part_activation()
 	. = ..()
 	ADD_TRAIT(mod.wearer, TRAIT_TRASHMAN, MOD_TRAIT)
 
-/obj/item/mod/module/hydraulic/on_suit_deactivation(deleting = FALSE)
+/obj/item/mod/module/hydraulic/on_part_deactivation(deleting = FALSE)
 	. = ..()
 	REMOVE_TRAIT(mod.wearer, TRAIT_TRASHMAN, MOD_TRAIT)
 
@@ -23,12 +23,12 @@
 	speed_added = mod.slowdown_active // so when you hit full ash accretion, slowdown cancels out
 	RegisterSignal(mod, COMSIG_SPEED_POTION_APPLIED, PROC_REF(update_added_speed))
 
-/obj/item/mod/module/ash_accretion/on_suit_activation()
+/obj/item/mod/module/ash_accretion/on_part_activation()
 	. = ..()
 	protection_enabled = TRUE
 	RegisterSignals(mod, list(COMSIG_MOD_DEPLOYED, COMSIG_MOD_RETRACTED), PROC_REF(on_mod_toggle))
 
-/obj/item/mod/module/ash_accretion/on_suit_deactivation(deleting)
+/obj/item/mod/module/ash_accretion/on_part_deactivation(deleting)
 	. = ..()
 	protection_enabled = FALSE
 	UnregisterSignal(mod, list(COMSIG_MOD_DEPLOYED, COMSIG_MOD_RETRACTED))
@@ -40,7 +40,13 @@
 
 /// Checks if the suit's current state is valid for buff-granting purposes. Should only be called when the MOD is deployed or retracted.
 /obj/item/mod/module/ash_accretion/proc/on_mod_toggle()
-	if((mod.wearer.head == mod.helmet) && (mod.wearer.wear_suit == mod.chestplate) && (mod.wearer.gloves == mod.gauntlets) && (mod.wearer.shoes == mod.boots) && mod.active)
+	var/fully_deployed = TRUE
+	for(var/obj/item/part as anything in mod.get_parts())
+		if(part.loc == mod)
+			fully_deployed = FALSE
+			break
+
+	if(fully_deployed && mod.active)
 		// suit is on and fully deployed, give them their proofing
 		mod.wearer.add_traits(list(TRAIT_ASHSTORM_IMMUNE, TRAIT_SNOWSTORM_IMMUNE), MOD_TRAIT)
 		RegisterSignal(mod.wearer, COMSIG_MOVABLE_MOVED, PROC_REF(on_move))
@@ -59,9 +65,8 @@
 	if(!traveled_tiles)
 		return
 
-	var/list/parts = mod.mod_parts + mod
 	var/datum/armor/to_remove = get_armor_by_type(armor_mod)
-	for(var/obj/item/part as anything in parts)
+	for(var/obj/item/part as anything in mod.get_parts(all = TRUE))
 		part.set_armor(part.get_armor().subtract_other_armor(to_remove.generate_new_with_multipliers(list(ARMOR_ALL = traveled_tiles))))
 
 	if(traveled_tiles == max_traveled_tiles)
@@ -69,3 +74,16 @@
 		mod.wearer.update_equipment_speed_mods()
 
 	traveled_tiles = 0
+
+/obj/item/mod/module/clamp
+	required_slots = list(ITEM_SLOT_GLOVES, ITEM_SLOT_BACK|ITEM_SLOT_BELT)
+
+/obj/item/mod/module/clamp/loader
+	required_slots = list(ITEM_SLOT_BACK|ITEM_SLOT_BELT)
+
+/obj/item/mod/module/hydraulic
+	required_slots = list(ITEM_SLOT_BACK|ITEM_SLOT_BELT)
+
+/obj/item/mod/module/magnet
+	required_slots = list(ITEM_SLOT_BACK|ITEM_SLOT_BELT)
+

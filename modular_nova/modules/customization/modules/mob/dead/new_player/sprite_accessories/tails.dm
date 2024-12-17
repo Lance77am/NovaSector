@@ -1,7 +1,7 @@
 /datum/sprite_accessory/tails
 	key = "tail"
 	generic = "Tail"
-	organ_type = /obj/item/organ/external/tail
+	organ_type = /obj/item/organ/tail
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/tails.dmi'
 	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_LAYER)
 	genetic = TRUE
@@ -28,7 +28,7 @@
 			return TRUE
 
 /datum/sprite_accessory/tails/none
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	icon_state = "none"
 	recommended_species = list(SPECIES_SYNTH, SPECIES_MAMMAL, SPECIES_HUMAN, SPECIES_HUMANOID, SPECIES_GHOUL)
 	color_src = null
@@ -37,7 +37,7 @@
 /datum/sprite_accessory/tails/lizard
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/tails.dmi'
 	recommended_species = list(SPECIES_LIZARD, SPECIES_LIZARD_ASH, SPECIES_MAMMAL, SPECIES_UNATHI, SPECIES_LIZARD_SILVER)
-	organ_type = /obj/item/organ/external/tail/lizard
+	organ_type = /obj/item/organ/tail/lizard
 
 /datum/sprite_accessory/tails/lizard/short/twotone
 	name = "Short (Two-Tone)"
@@ -46,29 +46,36 @@
 
 /datum/sprite_accessory/tails/human
 	recommended_species = list(SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_FELINE, SPECIES_MAMMAL, SPECIES_GHOUL)
-	organ_type = /obj/item/organ/external/tail/cat
+	organ_type = /obj/item/organ/tail/cat
 
-/datum/sprite_accessory/tails/human/cat
+/datum/sprite_accessory/tails/felinid/cat
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/tails.dmi'
 	icon_state = "cat"
 	color_src = USE_ONE_COLOR
+	recommended_species = list(SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_FELINE, SPECIES_MAMMAL, SPECIES_GHOUL)
+	organ_type = /obj/item/organ/tail/cat
+
+/datum/sprite_accessory/tails/human/monkeyColorable
+	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/tails.dmi'
+	icon_state = "monkey_colorable"
+	recommended_species = list(SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_FELINE, SPECIES_MAMMAL, SPECIES_MONKEY, SPECIES_GHOUL)
+	color_src = USE_ONE_COLOR
+	name = "Monkey Colorable"
 
 /datum/sprite_accessory/tails/monkey/default
-	name = "Monkey"
+	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/tails.dmi'
 	icon_state = "monkey"
-	icon = 'icons/mob/human/species/monkey/monkey_tail.dmi'
 	recommended_species = list(SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_FELINE, SPECIES_MAMMAL, SPECIES_MONKEY, SPECIES_GHOUL)
-	color_src = FALSE
-	organ_type = /obj/item/organ/external/tail/monkey
+	organ_type = /obj/item/organ/tail/monkey
 
 /datum/sprite_accessory/tails/mammal
 	icon_state = "none"
 	recommended_species = list(SPECIES_MAMMAL,SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_HUMANOID, SPECIES_GHOUL)
-	organ_type = /obj/item/organ/external/tail/fluffy/no_wag
+	organ_type = /obj/item/organ/tail/fluffy/no_wag
 	color_src = USE_MATRIXED_COLORS
 
 /datum/sprite_accessory/tails/mammal/wagging
-	organ_type = /obj/item/organ/external/tail/fluffy
+	organ_type = /obj/item/organ/tail/fluffy
 	flags_for_organ = SPRITE_ACCESSORY_WAG_ABLE
 
 /datum/sprite_accessory/tails/mammal/wagging/akula
@@ -258,11 +265,11 @@
 	name = "Otusian"
 	icon_state = "otie"
 
-/datum/sprite_accessory/tails/mammal/wagging/plug
+/datum/sprite_accessory/tails/mammal/plug
 	name = "Plug"
 	icon_state = "plugtail"
 
-/datum/sprite_accessory/tails/mammal/wagging/plug/scorpion
+/datum/sprite_accessory/tails/mammal/plug/scorpion
 	name = "Scorpion Plug"
 	icon_state = "scorptail"
 
@@ -396,6 +403,26 @@
 	name = "Tentacle"
 	icon_state = "tentacle"
 
+/datum/sprite_accessory/tails/mammal/acrador
+	name = "Acrador (Narrow)"
+	icon_state = "acrador_1"
+
+/datum/sprite_accessory/tails/mammal/acrador/normal
+	name = "Acrador (Medium)"
+	icon_state = "acrador_2"
+
+/datum/sprite_accessory/tails/mammal/acrador/big
+	name = "Acrador (Big)"
+	icon_state = "acrador_3"
+
+/datum/sprite_accessory/tails/mammal/wagging/acrador
+	name = "Acrador (Narrow and Long)"
+	icon_state = "acrador_4"
+
+/datum/sprite_accessory/tails/mammal/wagging/acrador/femine_very_long
+	name = "Acrador (Narrow and Very Long)"
+	icon_state = "acrador_5"
+
 /*
 *	TESHARI
 */
@@ -437,3 +464,15 @@
 /datum/sprite_accessory/tails/mammal/wagging/peacock
 	name = "Peacock"
 	icon_state = "peacock"
+
+/datum/sprite_accessory/tails/mammal/wagging/rattlesnake
+	name = "Rattlesnake"
+	icon_state = "rattlesnake"
+
+/datum/sprite_accessory/tails/mammal/black_jackal
+	name = "Black-backed Jackal"
+	icon_state = "blackjackal"
+
+/datum/sprite_accessory/tails/mammal/wagging/gecko
+	name = "Gecko"
+	icon_state = "gecko"

@@ -58,7 +58,6 @@
 		return FALSE
 
 	var/list/volunteers = SSpolling.poll_ghost_candidates(
-		question = "Do you want to play as an imaginary friend?",
 		check_jobban = ROLE_PAI,
 		poll_time = 10 SECONDS,
 		ignore_category = POLL_IGNORE_IMAGINARYFRIEND,
@@ -105,8 +104,8 @@
 		if(isliving(client_mob))
 			client_mob.ghostize()
 
-		var/mob/camera/imaginary_friend/friend_mob = client_mob.change_mob_type(
-			new_type = /mob/camera/imaginary_friend,
+		var/mob/eye/imaginary_friend/friend_mob = client_mob.change_mob_type(
+			new_type = /mob/eye/imaginary_friend,
 			location = get_turf(client_mob),
 			delete_old_mob = TRUE,
 		)

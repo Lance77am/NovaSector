@@ -15,10 +15,10 @@
 
 	if(ishuman(user))
 		//feet
-		if(!(human_user.bodytype & BODYTYPE_DIGITIGRADE) && !(human_user.dna.species.mutant_bodyparts["taur"]))
+		if(!(human_user.bodyshape & BODYSHAPE_DIGITIGRADE) && !(human_user.dna.species.mutant_bodyparts["taur"]))
 			user.allowed_turfs += "footprint"
 
-		if((human_user.bodytype & BODYTYPE_DIGITIGRADE) || human_user.dna.species.mutant_bodyparts["taur"])
+		if((human_user.bodyshape & BODYSHAPE_DIGITIGRADE) || human_user.dna.species.mutant_bodyparts["taur"])
 			user.allowed_turfs += list("pawprint", "hoofprint", "clawprint")
 
 		//species & taurs
@@ -52,20 +52,19 @@
 				user.allowed_turfs += "holoseat"
 
 		//wings
-		if((istype(user.get_organ_slot(ORGAN_SLOT_WINGS), /obj/item/organ/external/wings/moth)) || HAS_TRAIT(user, TRAIT_SPARKLE_ASPECT))
+		if((istype(user.get_organ_slot(ORGAN_SLOT_WINGS), /obj/item/organ/wings/moth)) || HAS_TRAIT(user, TRAIT_SPARKLE_ASPECT))
 			user.allowed_turfs += "dust" //moth's dust ✨
 
 		//body parts
-		if(istype(user.get_organ_slot(ORGAN_SLOT_EXTERNAL_TAIL), /obj/item/organ/external/tail))
+		if(istype(user.get_organ_slot(ORGAN_SLOT_EXTERNAL_TAIL), /obj/item/organ/tail))
 			var/name = human_user.dna.species.mutant_bodyparts["tail"][MUTANT_INDEX_NAME]
-			var/datum/sprite_accessory/tails/tail = GLOB.sprite_accessories["tail"][name]
+			var/datum/sprite_accessory/tails/tail = SSaccessories.sprite_accessories["tail"][name]
 			if(tail.fluffy)
 				user.allowed_turfs += "tails"
 
 		var/taur_mode = human_user.get_taur_mode()
 		if(taur_mode & STYLE_TAUR_SNAKE)
 			user.allowed_turfs -= list("pawprint", "hoofprint", "clawprint")
-			user.allowed_turfs += "constrict"
 
 		//clothing
 		var/obj/item/shoes = user.get_item_by_slot(ITEM_SLOT_FEET)
@@ -81,9 +80,9 @@
 	for(var/choice in user.allowed_turfs)
 
 		var/datum/radial_menu_choice/option = new
-		option.image = image(icon = 'modular_nova/master_files/icons/effects/turf_effects_icons.dmi', icon_state = initial(choice))
+		option.image = image(icon = 'modular_nova/master_files/icons/effects/turf_effects_icons.dmi', icon_state = choice)
 
-		display_turf[initial(choice)] = option
+		display_turf[choice] = option
 
 	sort_list(display_turf)
 	var/chosen_turf = show_radial_menu(user, user, display_turf, custom_check = CALLBACK(src, PROC_REF(check_menu), user))
@@ -98,7 +97,7 @@
 		user.owned_turf.dir = user.dir
 
 		if(ishuman(user))
-			human_user.update_mutant_bodyparts()
+			human_user.update_body_parts()
 
 		var/list/DNA_trail = list("shoeprint", "footprint", "pawprint", "hoofprint", "clawprint")
 		if(current_turf in DNA_trail) //These turfs leave clues of their owner
@@ -113,21 +112,18 @@
 				user.owned_turf.color = human_user.dna.features["mcolor"]
 
 
-		var/list/body_part = list("tails", "constrict")
+		var/list/body_part = list("tails")
 		if(current_turf in body_part) //These turfs can be a body part and need color/size applied
 			var/key = null
 
 			var/list/tail_emotes = list("tails")
 			if(current_turf in tail_emotes)
 				key = "tail"
-			var/list/taur_emotes = list("constrict")
-			if(current_turf in taur_emotes)
-				key = "taur"
 
 			//coloring
 			var/list/finished_list = list()
 			var/list/color_list = human_user.dna.species.mutant_bodyparts[key][MUTANT_INDEX_COLOR_LIST] //identify color
-			var/datum/sprite_accessory/sprite_type = GLOB.sprite_accessories[key][human_user.dna.species.mutant_bodyparts[key][MUTANT_INDEX_NAME]] //identify type
+			var/datum/sprite_accessory/sprite_type = SSaccessories.sprite_accessories[key][human_user.dna.species.mutant_bodyparts[key][MUTANT_INDEX_NAME]] //identify type
 
 			switch(sprite_type.color_src)
 				if(USE_MATRIXED_COLORS)

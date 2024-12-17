@@ -9,7 +9,7 @@
 	)
 	inherent_biotypes = MOB_ORGANIC|MOB_HUMANOID
 	mutant_bodyparts = list()
-	mutanttongue = /obj/item/organ/internal/tongue/vulpkanin
+	mutanttongue = /obj/item/organ/tongue/vulpkanin
 	species_language_holder = /datum/language_holder/vulpkanin
 	payday_modifier = 1.0
 	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_MAGIC | MIRROR_PRIDE | ERT_SPAWN | RACE_SWAP | SLIME_EXTRACT
@@ -31,7 +31,7 @@
 		"legs" = list("Normal Legs", FALSE),
 	)
 
-/obj/item/organ/internal/tongue/vulpkanin
+/obj/item/organ/tongue/vulpkanin
 	liked_foodtypes = RAW | MEAT
 	disliked_foodtypes = CLOTH
 	toxic_foodtypes = TOXIC
@@ -71,22 +71,6 @@
 	if(BMS)
 		markings = assemble_body_markings_from_set(BMS, passed_features, src)
 	return markings
-
-/*	Runtime in vulpkanin.dm,78: pick() from empty list
-/datum/species/vulpkanin/random_name(gender,unique,lastname)
-	var/randname
-	if(gender == MALE)
-		randname = pick(GLOB.first_names_male_vulp)
-	else
-		randname = pick(GLOB.first_names_female_vulp)
-
-	if(lastname)
-		randname += " [lastname]"
-	else
-		randname += " [pick(GLOB.last_names_vulp)]"
-
-	return randname
-*/
 
 /datum/species/vulpkanin/get_species_description()
 	return placeholder_description

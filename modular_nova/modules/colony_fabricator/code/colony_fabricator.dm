@@ -6,13 +6,12 @@
 	icon = 'modular_nova/modules/colony_fabricator/icons/machines.dmi'
 	icon_state = "colony_lathe"
 	base_icon_state = "colony_lathe"
-	production_animation = null
 	circuit = null
 	production_animation = "colony_lathe_n"
-	obj_flags = CAN_BE_HIT | NO_DECONSTRUCTION
 	light_color = LIGHT_COLOR_BRIGHT_YELLOW
 	light_power = 5
 	allowed_buildtypes = COLONY_FABRICATOR
+	speedup_disabled = TRUE
 	/// The item we turn into when repacked
 	var/repacked_type = /obj/item/flatpacked_machine
 	/// The sound loop played while the fabricator is making something
@@ -31,6 +30,16 @@
 /obj/machinery/rnd/production/colony_lathe/Destroy()
 	QDEL_NULL(soundloop)
 	return ..()
+
+// formerly NO_DECONSTRUCTION
+/obj/machinery/rnd/production/colony_lathe/default_deconstruction_screwdriver(mob/user, icon_state_open, icon_state_closed, obj/item/screwdriver)
+	return NONE
+
+/obj/machinery/rnd/production/colony_lathe/default_deconstruction_crowbar(obj/item/crowbar, ignore_panel, custom_deconstruct)
+	return NONE
+
+/obj/machinery/rnd/production/colony_lathe/default_pry_open(obj/item/crowbar, close_after_pry, open_density, closed_density)
+	return NONE
 
 /// Proc for starting extra printing visuals, because upstream removed any nice way to do this
 /obj/machinery/rnd/production/proc/start_printing_visuals()
@@ -69,7 +78,7 @@
 
 	if(design_delta > 0)
 		say("Received [design_delta] new design[design_delta == 1 ? "" : "s"].")
-		playsound(src, 'sound/machines/twobeep_high.ogg', 50, TRUE)
+		playsound(src, 'sound/machines/beep/twobeep_high.ogg', 50, TRUE)
 
 	update_static_data_for_all_viewers()
 
@@ -77,6 +86,8 @@
 
 /obj/item/flatpacked_machine
 	name = "flat-packed rapid construction fabricator"
+	/// For all flatpacked machines, set the desc to the type_to_deploy followed by ::desc to reuse the type_to_deploy's description
+	desc = /obj/machinery/rnd/production/colony_lathe::desc
 	icon = 'modular_nova/modules/colony_fabricator/icons/packed_machines.dmi'
 	icon_state = "colony_lathe_packed"
 	w_class = WEIGHT_CLASS_BULKY
@@ -87,7 +98,6 @@
 
 /obj/item/flatpacked_machine/Initialize(mapload)
 	. = ..()
-	desc = initial(type_to_deploy.desc)
 	give_deployable_component()
 	give_manufacturer_examine()
 

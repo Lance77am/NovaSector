@@ -171,7 +171,7 @@
 		resolve_parent.balloon_alert(user, "can't reach!")
 		return FALSE
 
-	if(!isliving(user) || user.incapacitated())
+	if(!isliving(user) || user.incapacitated)
 		return FALSE
 
 	var/obj/item/gun/gun_to_draw = locate() in real_location
@@ -234,37 +234,15 @@
 	base_icon_state = "security_helmet"
 	actions_types = list(/datum/action/item_action/toggle)
 	supports_variations_flags = CLOTHING_SNOUTED_VARIATION
-	flags_cover = HEADCOVERSEYES | PEPPERPROOF
-	visor_flags_cover = HEADCOVERSEYES | PEPPERPROOF
+	flags_cover = parent_type::flags_cover | PEPPERPROOF
 	dog_fashion = null
 
-	///chat message when the visor is toggled down.
-	var/toggle_message = "You pull the visor down on"
-	///chat message when the visor is toggled up.
-	var/alt_toggle_message = "You push the visor up on"
-	///Can toggle?
-	var/can_toggle = TRUE
-
-/// Duplication of toggleable logic - only way to make it toggleable without worse hacks due to being in base maps.
-/obj/item/clothing/head/helmet/sec/attack_self(mob/user)
+/obj/item/clothing/head/helmet/sec/click_alt(mob/user)
 	. = ..()
-	if(.)
-		return
-	if(user.incapacitated() || !can_toggle)
-		return
-	up = !up
-	flags_1 ^= visor_flags
-	flags_inv ^= visor_flags_inv
-	flags_cover ^= visor_flags_cover
-	// This part is changed to work with the seclight.
-	base_icon_state = "[initial(icon_state)][up ? "up" : ""]"
-	update_icon_state()
-	to_chat(user, span_notice("[up ? alt_toggle_message : toggle_message] \the [src]."))
-
-	user.update_worn_head()
-	if(iscarbon(user))
-		var/mob/living/carbon/carbon_user = user
-		carbon_user.head_update(src, forced = TRUE)
+	if (flipped_visor)
+		flags_cover &= ~PEPPERPROOF
+	else
+		flags_cover |= PEPPERPROOF
 
 
 //Beret replacement
@@ -400,11 +378,11 @@
 		),
 	)
 
-/obj/item/clothing/neck/security_cape/AltClick(mob/user)
-	. = ..()
+/obj/item/clothing/neck/security_cape/click_alt(mob/user)
 	swapped = !swapped
 	to_chat(user, span_notice("You swap which arm [src] will lay over."))
 	update_appearance()
+	return CLICK_ACTION_SUCCESS
 
 /obj/item/clothing/neck/security_cape/update_appearance(updates)
 	. = ..()
@@ -439,6 +417,10 @@
 			RESKIN_WORN_ICON_STATE = "gloves_white"
 		),
 	)
+
+/obj/item/clothing/gloves/color/black/security/blu // Wait why these a subtype of black?!? Who did this
+	icon = 'icons/obj/clothing/gloves.dmi'
+	worn_icon = 'icons/mob/clothing/hands.dmi'
 
 /obj/item/clothing/gloves/tackler/security	//Can't just overwrite tackler, as there's a ton of subtypes that we'd then need to account for. This is easier. MUCH easier.
 	icon = 'modular_nova/master_files/icons/obj/clothing/gloves.dmi'
@@ -579,13 +561,24 @@
 	unique_reskin = null // prevents you from losing the unique sprite
 
 /obj/item/clothing/under/rank/security/officer/skirt
-	name = "security battle dress"
-	desc = "An asymmetrical, unisex uniform with the legs replaced by a utility skirt."
-	worn_icon_state = "security_skirt"
-	icon_state = "security_skirt"
-	uses_advanced_reskins = FALSE
-	unique_reskin = null
-	alt_covers_chest = FALSE
+	name = "security jumpskirt"
+	desc = "Turtleneck sweater commonly worn by Peacekeepers, attached with a skirt."
+	icon = 'modular_nova/master_files/icons/obj/clothing/under/security.dmi'
+	worn_icon = 'modular_nova/master_files/icons/mob/clothing/under/security.dmi'
+	icon_state = "jumpskirt_blue"
+	female_sprite_flags = FEMALE_UNIFORM_TOP_ONLY
+	gets_cropped_on_taurs = FALSE
+	uses_advanced_reskins = TRUE
+	unique_reskin = list(
+		"Blue Variant" = list(
+			RESKIN_ICON_STATE = "jumpskirt_blue",
+			RESKIN_WORN_ICON_STATE = "jumpskirt_blue"
+        ),
+		"Black Variant" = list(
+			RESKIN_ICON_STATE = "jumpskirt_black",
+			RESKIN_WORN_ICON_STATE = "jumpskirt_black"
+		),
+	)
 
 //Warden
 /obj/item/clothing/under/rank/security/warden
@@ -690,7 +683,7 @@
 	worn_icon = 'icons/mob/clothing/eyes.dmi'
 	icon_state = "sunhudsec"
 	glass_colour_type = /datum/client_colour/glass_colour/darkred
-	current_skin = "sunhudsec" //prevents reskinning; a bit hacky to say its already reskinned but its better than a code rewrite
+	current_skin = "sunhudsec" //prevents reskinning; a bit hacky to say it's already reskinned but it's better than a code rewrite
 
 /obj/item/clothing/glasses/hud/security/sunglasses/eyepatch/redsec
 	icon = 'icons/obj/clothing/glasses.dmi'
@@ -768,6 +761,7 @@
 		/obj/item/gun/ballistic/rifle/boltaction, //fits if you make it an obrez
 		/obj/item/gun/energy/laser/captain,
 		/obj/item/gun/energy/e_gun/hos,
+		/obj/item/gun/energy/recharge/kinetic_accelerator/variant/glock,
 		))
 
 /obj/item/storage/belt/holster/detective
@@ -793,6 +787,7 @@
 		/obj/item/gun/ballistic/rifle/boltaction, //fits if you make it an obrez
 		/obj/item/gun/energy/laser/captain,
 		/obj/item/gun/energy/e_gun/hos,
+		/obj/item/gun/energy/recharge/kinetic_accelerator/variant/glock,
 		))
 
 /obj/item/storage/belt/holster/energy/Initialize(mapload)
@@ -811,6 +806,7 @@
 		/obj/item/gun/ballistic/automatic/pistol/plasma_marksman,
 		/obj/item/gun/ballistic/automatic/pistol/plasma_thrower,
 		/obj/item/ammo_box/magazine/recharge/plasma_battery,
+		/obj/item/gun/energy/recharge/kinetic_accelerator/variant/glock,
 	))
 /*
 *	HEAD
@@ -821,11 +817,8 @@
 	worn_icon = 'icons/mob/clothing/head/helmet.dmi'
 	icon_state = "helmet"
 	base_icon_state = "helmet"
-	actions_types = null
-	can_toggle = FALSE
 	supports_variations_flags = CLOTHING_SNOUTED_VARIATION_NO_NEW_ICON
-	flags_cover = HEADCOVERSEYES
-	flags_inv = HIDEHAIR
+	dog_fashion = /datum/dog_fashion/head/helmet
 
 /*
 *	UNIFORM

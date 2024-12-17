@@ -1,7 +1,8 @@
-/obj/item/organ/external/xenohead
+/obj/item/organ/xenohead
 	name = "xeno head"
 	desc = "How did you take that off?"
 	icon_state = "random_fly_2"
+	organ_flags = parent_type::organ_flags | ORGAN_EXTERNAL
 
 	mutantpart_key = "xenohead"
 	mutantpart_info = list(MUTANT_INDEX_NAME = "Standard", MUTANT_INDEX_COLOR_LIST = list("#FFFFFF"))
@@ -23,4 +24,4 @@
 	return draw_color
 
 /datum/bodypart_overlay/mutant/xenohead/get_global_feature_list()
-	return GLOB.sprite_accessories["xenohead"]
+	return SSaccessories.sprite_accessories["xenohead"]

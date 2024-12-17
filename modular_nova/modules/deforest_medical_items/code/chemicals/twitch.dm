@@ -46,7 +46,7 @@
 	. = ..()
 
 	our_guy.add_movespeed_modifier(/datum/movespeed_modifier/reagent/twitch)
-	our_guy.next_move_modifier -= 0.3 // For the duration of this you move and attack faster
+	our_guy.next_move_modifier *= 0.7 // For the duration of this you move and attack faster
 
 	our_guy.sound_environment_override = SOUND_ENVIRONMENT_DIZZY
 
@@ -71,16 +71,12 @@
 
 	game_plane_master_controller.add_filter(TWITCH_SCREEN_BLUR, 1, list("type" = "radial_blur", "size" = 0.02))
 
-	for(var/filter in game_plane_master_controller.get_filters(TWITCH_SCREEN_BLUR))
-		animate(filter, loop = -1, size = 0.04, time = 2 SECONDS, easing = ELASTIC_EASING|EASE_OUT, flags = ANIMATION_PARALLEL)
-		animate(size = 0.02, time = 6 SECONDS, easing = CIRCULAR_EASING|EASE_IN)
-
 
 /datum/reagent/drug/twitch/on_mob_end_metabolize(mob/living/carbon/our_guy)
 	. = ..()
 
 	our_guy.remove_movespeed_modifier(/datum/movespeed_modifier/reagent/twitch)
-	our_guy.next_move_modifier += (overdosed ? 0.5 : 0.3)
+	our_guy.next_move_modifier /= (overdosed ? 0.49 : 0.7)
 
 	our_guy.sound_environment_override = NONE
 
@@ -146,7 +142,7 @@
 		span_danger("[source] effortlessly dodges [hitting_projectile]!"),
 		span_userdanger("You effortlessly evade [hitting_projectile]!"),
 	)
-	playsound(source, pick('sound/weapons/bulletflyby.ogg', 'sound/weapons/bulletflyby2.ogg', 'sound/weapons/bulletflyby3.ogg'), 75, TRUE)
+	playsound(source, pick('sound/items/weapons/bulletflyby.ogg', 'sound/items/weapons/bulletflyby2.ogg', 'sound/items/weapons/bulletflyby3.ogg'), 75, TRUE)
 	source.add_filter(TWITCH_BLUR_EFFECT, 2, gauss_blur_filter(5))
 	addtimer(CALLBACK(source, TYPE_PROC_REF(/datum, remove_filter), TWITCH_BLUR_EFFECT), 0.5 SECONDS)
 	return COMPONENT_BULLET_PIERCED
@@ -178,7 +174,7 @@
 
 	RegisterSignal(our_guy, COMSIG_ATOM_PRE_BULLET_ACT, PROC_REF(dodge_bullets))
 
-	our_guy.next_move_modifier -= 0.2 // Overdosing makes you a liiitle faster but you know has some really bad consequences
+	our_guy.next_move_modifier *= 0.7 // Overdosing makes you a liiitle faster but you know has some really bad consequences
 
 	if(!our_guy.hud_used)
 		return

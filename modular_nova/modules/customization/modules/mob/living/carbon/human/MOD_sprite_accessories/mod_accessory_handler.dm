@@ -1,25 +1,25 @@
 // This DMI holds all of the overlayable textures for MODs
 #define HARDLIGHT_DMI 'modular_nova/modules/customization/modules/mob/living/carbon/human/MOD_sprite_accessories/icons/MOD_mask.dmi'
 
-/obj/item/mod/control/seal_part(obj/item/clothing/part, seal)
+/obj/item/mod/control/seal_part(obj/item/clothing/part, is_sealed, no_activation = FALSE)
 	. = ..()
 	if(activating)
 		return
 
-	update_external_organs_modsuit_status(seal && active)
+	update_external_organs_modsuit_status(is_sealed && active)
 	wearer.update_body_parts(TRUE)
 
-/obj/item/mod/control/finish_activation(on)
+/obj/item/mod/control/control_activation(is_on)
 	. = ..()
-	update_external_organs_modsuit_status(on)
+	update_external_organs_modsuit_status(is_on)
 	wearer.update_body_parts(TRUE)
 
-/obj/item/mod/control/on_mod_deployed(mob/user)
+/obj/item/mod/control/deploy(mob/user, obj/item/part, instant = FALSE)
 	. = ..()
 	update_external_organs_modsuit_status(active)
 	wearer.update_body_parts(TRUE)
 
-/obj/item/mod/control/on_mod_retracted(mob/user)
+/obj/item/mod/control/retract(mob/user, obj/item/part, instant = FALSE)
 	. = ..()
 	update_external_organs_modsuit_status(FALSE)
 	wearer.update_body_parts(TRUE)
@@ -30,8 +30,9 @@
 	if(!wearer?.organs)
 		return
 
-	for(var/obj/item/organ/external/to_update in wearer.organs)
-		to_update.bodypart_overlay.set_modsuit_status(status)
+	for(var/obj/item/organ/to_update in wearer.organs)
+		if(to_update.organ_flags & ORGAN_EXTERNAL)
+			to_update.bodypart_overlay.set_modsuit_status(status)
 
 
 // Tail hardlight

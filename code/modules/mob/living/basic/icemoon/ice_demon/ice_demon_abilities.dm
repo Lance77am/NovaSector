@@ -14,7 +14,6 @@
 	button_icon = 'icons/obj/ore.dmi'
 	button_icon_state = "bluespace_crystal"
 	cooldown_time = 3 SECONDS
-	melee_cooldown_time = 0 SECONDS
 	///time delay before teleport
 	var/time_delay = 0.5 SECONDS
 
@@ -34,11 +33,10 @@
 /datum/action/cooldown/mob_cooldown/slippery_ice_floors
 	name = "Iced Floors"
 	desc = "Summon slippery ice floors all around!"
-	button_icon = 'icons/turf/floors/ice_turf.dmi'
-	button_icon_state = "ice_turf-6"
+	button_icon = 'icons/effects/freeze.dmi'
+	button_icon_state = "ice_cube"
 	cooldown_time = 2 SECONDS
 	click_to_activate = FALSE
-	melee_cooldown_time = 0 SECONDS
 	///perimeter we will spawn the iced floors on
 	var/radius = 1
 	///intervals we will spawn the ice floors in
@@ -84,6 +82,7 @@
 
 /datum/action/cooldown/spell/conjure/limit_summons/create_afterimages
 	name = "Create After Images"
+	desc = "Creates two illusionary doubles to increase your firepower, but which share some of your life force."
 	button_icon = 'icons/mob/simple/icemoon/icemoon_monsters.dmi'
 	button_icon_state = "ice_demon"
 	spell_requirements = NONE

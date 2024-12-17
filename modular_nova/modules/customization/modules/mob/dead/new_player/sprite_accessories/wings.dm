@@ -11,7 +11,7 @@
 	key = "wings"
 	color_src = USE_ONE_COLOR
 	recommended_species = list(SPECIES_HUMAN, SPECIES_SYNTH, SPECIES_FELINE, SPECIES_LIZARD, SPECIES_MAMMAL)
-	organ_type = /obj/item/organ/external/wings
+	organ_type = /obj/item/organ/wings
 	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_LAYER, BODY_ADJ_LAYER)
 	genetic = TRUE
 
@@ -57,7 +57,7 @@
 	return TRUE
 
 /datum/sprite_accessory/wings/none
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	icon_state = "none"
 	factual = FALSE
 
@@ -200,6 +200,7 @@
 /datum/sprite_accessory/wings/mammal/harpy/bat
 	name = "Harpy (Bat)"
 	icon_state = "harpybat"
+	color_src = USE_MATRIXED_COLORS
 
 /datum/sprite_accessory/wings/mammal/top/harpy/alt
 	name = "Harpy (Top - Alt)"
@@ -212,6 +213,11 @@
 /datum/sprite_accessory/wings/mammal/top/harpy/bat
 	name = "Harpy (Top - Bat)"
 	icon_state = "harpybat_top"
+	color_src = USE_MATRIXED_COLORS
+
+/datum/sprite_accessory/wings/mammal/top/harpy/bat/fluffless
+	name = "Harpy (Top - Bat - Fluffless)"
+	icon_state = "harpybat_fluffless_top"
 
 /datum/sprite_accessory/wings/mammal/pterodactyl
 	name = "Pterodactyl"
@@ -242,6 +248,11 @@
 /datum/sprite_accessory/wings/mammal/succubus
 	name = "Succubus"
 	icon_state = "succubus"
+	color_src = USE_MATRIXED_COLORS
+
+/datum/sprite_accessory/wings/mammal/manta
+	name = "Manta Ray"
+	icon_state = "manta"
 	color_src = USE_MATRIXED_COLORS
 
 /datum/sprite_accessory/wings/mammal/tiny
@@ -297,11 +308,11 @@
 	icon = 'modular_nova/master_files/icons/mob/sprite_accessory/moth_wings.dmi' // Needs new icon to suit new naming convention
 	default_color = "#FFFFFF"
 	recommended_species = list(SPECIES_MOTH, SPECIES_MAMMAL, SPECIES_INSECT) // Mammals too, I guess. They wont get flight though, see the wing organs for that logic
-	organ_type = /obj/item/organ/external/wings/moth
+	organ_type = /obj/item/organ/wings/moth
 	relevent_layers = list(BODY_BEHIND_LAYER, BODY_FRONT_LAYER)
 
 /datum/sprite_accessory/wings/moth/none
-	name = "None"
+	name = SPRITE_ACCESSORY_NONE
 	icon_state = "none"
 
 /datum/sprite_accessory/wings/moth/atlas
@@ -400,6 +411,10 @@
 /datum/sprite_accessory/wings/moth/moffra
 	name = "Moth (Moffra)"
 	icon_state = "moffra"
+
+/datum/sprite_accessory/wings/moth/lightbearer
+	name = "Moth (Lightbearer)"
+	icon_state = "lightbearer"
 
 /datum/sprite_accessory/wings/mammal/top/arfel_harpy
 	name = "Arfel Harpy"

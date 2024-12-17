@@ -29,6 +29,11 @@
 	restricted_species = list(/datum/species/lizard/ashwalker)
 	random_appearance = FALSE
 
+/obj/effect/mob_spawn/ghost_role/human/ash_walker/special(mob/living/carbon/human/spawned_human)
+	spawned_human.fully_replace_character_name(null, spawned_human.generate_random_mob_name(TRUE))
+	quirks_enabled = TRUE // ghost role quirks
+	. = ..()
+
 /// Listening Outpost
 
 /obj/effect/mob_spawn/ghost_role/human/lavaland_syndicate/comms/space
@@ -51,10 +56,10 @@
 // SPAWNERS
 
 /obj/effect/mob_spawn/ghost_role/human/interdyne_planetary_base
-	name = "Interdyne Bioweapon Scientist"
+	name = "Interdyne Scientist"
 	icon = 'icons/obj/machines/sleeper.dmi'
 	icon_state = "sleeper_s"
-	prompt_name = "an Interdyne bioweapon scientist"
+	prompt_name = "an Interdyne scientist"
 	computer_area = /area/ruin/interdyne_planetary_base/main
 	you_are_text = "You are a science technician employed in an Interdyne research facility developing biological weapons."
 	flavour_text = "Interdyne middle management has relayed that Nanotrasen is actively mining in this sector. A deal with the Syndicate remains. A cargo ferry is docked at the rear of your ship and can be used for trade with both factions. Continue your research as best you can, and try to keep out of trouble."
@@ -122,7 +127,7 @@
 // OUTFITS
 
 /datum/outfit/interdyne_planetary_base
-	name = "Interdyne Bioweapon Scientist"
+	name = "Interdyne Scientist"
 	id = /obj/item/card/id/advanced/chameleon
 	id_trim = /datum/id_trim/syndicom/nova/interdyne
 	uniform = /obj/item/clothing/under/syndicate/nova/interdyne
@@ -143,7 +148,7 @@
 	var/jobtype = /datum/job/interdyne_planetary_base
 
 /datum/outfit/interdyne_planetary_base/post_equip(mob/living/carbon/human/syndicate, visualsOnly = FALSE)
-	syndicate.faction |= ROLE_SYNDICATE
+	syndicate.faction |= ROLE_INTERDYNE_PLANETARY_BASE
 
 	var/obj/item/card/id/id_card = syndicate.wear_id
 	if(istype(id_card))
@@ -171,7 +176,7 @@
 	uniform = /obj/item/clothing/under/syndicate/nova/interdyne/miner
 	suit = /obj/item/clothing/suit/syndicate/interdyne_jacket
 	r_pocket = /obj/item/storage/bag/ore
-	id_trim = /datum/id_trim/syndicom/nova/interdyne
+	id_trim = /datum/id_trim/syndicom/nova/interdyne/shaftminer
 	back = /obj/item/storage/backpack/explorer
 	backpack_contents = list(
 		/obj/item/storage/box/survival/interdyne=1,
@@ -210,7 +215,7 @@
 	desc = "A bowman headset with a large red cross on the earpiece, has a small 'IP' written on the top strap. Protects the ears from flashbangs."
 	icon_state = "syndie_headset"
 	inhand_icon_state = null
-	radiosound = 'modular_nova/modules/radiosound/sound/radio/syndie.ogg'
+	radio_talk_sound = 'modular_nova/modules/radiosound/sound/radio/syndie.ogg'
 	keyslot = new /obj/item/encryptionkey/headset_syndicate/interdyne
 
 /obj/item/radio/headset/interdyne/Initialize(mapload)

@@ -13,6 +13,7 @@
 	incompatible_modules = list(/obj/item/mod/module/baton_holster)
 	cooldown_time = 0.5 SECONDS
 	allow_flags = MODULE_ALLOW_INACTIVE
+	required_slots = list(ITEM_SLOT_GLOVES)
 	/// Have they sacrificed a baton to actually be able to use this?
 	var/eaten_baton = FALSE
 
@@ -58,10 +59,10 @@
 	icon_state = "magnet"
 	icon = 'modular_nova/modules/contractor/icons/modsuit_modules.dmi'
 
-/obj/item/mod/module/springlock/contractor/on_suit_activation() // This module is actually *not* a death trap
+/obj/item/mod/module/springlock/contractor/on_part_activation() // This module is actually *not* a death trap
 	return
 
-/obj/item/mod/module/springlock/contractor/on_suit_deactivation(deleting = FALSE)
+/obj/item/mod/module/springlock/contractor/on_part_deactivation(deleting = FALSE)
 	return
 
 /// This exists for the adminbus contractor modsuit. Do not use otherwise
@@ -82,3 +83,4 @@
 	active_power_cost = DEFAULT_CHARGE_DRAIN * 0.3
 	device = /obj/item/gun/magic/hook/contractor
 	cooldown_time = 0.5 SECONDS
+	required_slots = list(ITEM_SLOT_GLOVES)

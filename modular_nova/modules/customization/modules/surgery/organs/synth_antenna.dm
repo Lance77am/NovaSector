@@ -1,4 +1,4 @@
-/obj/item/organ/external/synth_antenna
+/obj/item/organ/synth_antenna
 	name = "synth antenna"
 	desc = "Wonder if we'll catch Syndicate frequencies with these..."
 	icon_state = "random_fly_1"
@@ -23,4 +23,4 @@
 	return draw_color
 
 /datum/bodypart_overlay/mutant/synth_antenna/get_global_feature_list()
-	return GLOB.sprite_accessories[MUTANT_SYNTH_ANTENNA]
+	return SSaccessories.sprite_accessories[MUTANT_SYNTH_ANTENNA]

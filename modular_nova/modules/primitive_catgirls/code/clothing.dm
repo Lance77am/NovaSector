@@ -30,7 +30,7 @@
 
 /obj/item/clothing/under/dress/skirt/primitive_catgirl_tailored_dress
 	name = "tailored dress"
-	desc = "A handmade dress, tailored to one's"
+	desc = "A handmade dress, tailored to fit perfectly to its wearer's body measurements."
 	icon_state = "tailored_dress"
 	icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
 	worn_icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
@@ -38,6 +38,19 @@
 	greyscale_config = /datum/greyscale_config/primitive_catgirl_tailored_dress
 	greyscale_config_worn = /datum/greyscale_config/primitive_catgirl_tailored_dress/worn
 	greyscale_colors = "#cec8bf#364660"
+	flags_1 = IS_PLAYER_COLORABLE_1
+	has_sensor = FALSE
+
+/obj/item/clothing/under/dress/skirt/primitive_catgirl_tunic
+	name = "handmade tunic"
+	desc = "A simple garment that reaches from the shoulders to above the knee. This one has a belt to secure it."
+	icon_state = "tunic"
+	icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
+	worn_icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
+	body_parts_covered = GROIN|CHEST
+	greyscale_config = /datum/greyscale_config/primitive_catgirl_tunic
+	greyscale_config_worn = /datum/greyscale_config/primitive_catgirl_tunic/worn
+	greyscale_colors = "#cec8bf#faece4#594032"
 	flags_1 = IS_PLAYER_COLORABLE_1
 	has_sensor = FALSE
 
@@ -84,21 +97,6 @@
 	greyscale_colors = "#594032#cec8bf"
 	flags_1 = IS_PLAYER_COLORABLE_1
 
-/obj/item/clothing/suit/jacket/primitive_catgirl_tunic
-	name = "handmade tunic"
-	desc = "A simple garment, that reaches from the shoulders to above the knee. This one has a belt to secure it."
-	icon_state = "tunic"
-	icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
-	worn_icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
-	body_parts_covered = CHEST
-	cold_protection = CHEST
-	min_cold_protection_temperature = FIRE_SUIT_MIN_TEMP_PROTECT
-	supports_variations_flags = CLOTHING_DIGITIGRADE_VARIATION_NO_NEW_ICON
-	greyscale_config = /datum/greyscale_config/primitive_catgirl_tunic
-	greyscale_config_worn = /datum/greyscale_config/primitive_catgirl_tunic/worn
-	greyscale_colors = "#cec8bf#faece4#594032"
-	flags_1 = IS_PLAYER_COLORABLE_1
-
 /obj/item/clothing/suit/apron/chef/colorable_apron/primitive_catgirl_leather
 	greyscale_colors = "#594032"
 
@@ -134,26 +132,8 @@
 
 // Masks
 
-/obj/item/clothing/mask/primitive_catgirl_greyscale_gaiter
-	name = "neck gaiter"
-	desc = "A cloth for covering your neck, and usually part of your face too, but that part's optional."
-	icon_state = "gaiter"
-	inhand_icon_state = "balaclava"
-	icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
-	worn_icon = 'modular_nova/modules/primitive_catgirls/icons/clothing_greyscale.dmi'
-	greyscale_config = /datum/greyscale_config/primitive_catgirl_gaiter
-	greyscale_config_worn = /datum/greyscale_config/primitive_catgirl_gaiter/worn
+/obj/item/clothing/mask/neck_gaiter/primitive_catgirl_gaiter
 	greyscale_colors = "#364660"
-	w_class = WEIGHT_CLASS_TINY
-	flags_inv = HIDEFACE|HIDESNOUT
-	flags_cover = MASKCOVERSMOUTH
-	visor_flags_inv = HIDEFACE|HIDESNOUT
-	visor_flags_cover = MASKCOVERSMOUTH
-	flags_1 = IS_PLAYER_COLORABLE_1
-	actions_types = list(/datum/action/item_action/adjust)
-
-/obj/item/clothing/mask/primitive_catgirl_greyscale_gaiter/attack_self(mob/user)
-	adjustmask(user)
 
 // Head
 
@@ -171,7 +151,6 @@
 	greyscale_colors = "#f1f6ff#364660"
 	w_class = WEIGHT_CLASS_TINY
 	flags_1 = IS_PLAYER_COLORABLE_1
-	actions_types = list(/datum/action/item_action/adjust)
 
 // Misc Items
 

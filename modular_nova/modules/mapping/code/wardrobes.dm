@@ -1,4 +1,4 @@
-/obj/machinery/vending/wardrobe/canLoadItem(obj/item/I,mob/user)
+/obj/machinery/vending/wardrobe/canLoadItem(obj/item/I, mob/user, send_message = TRUE)
 	return (I.type in products)
 
 /obj/machinery/vending/wardrobe/syndie_wardrobe
@@ -20,7 +20,7 @@
 		/obj/item/clothing/under/syndicate/combat = 3,
 		/obj/item/clothing/shoes/combat = 3,
 		/obj/item/clothing/mask/gas/syndicate = 3,
-		/obj/item/clothing/mask/gas/sechailer/syndicate = 3,
+		/obj/item/clothing/mask/neck_gaiter/syndicate = 3,
 		/obj/item/clothing/suit/hooded/wintercoat/nova/syndicate = 5,
 		/obj/item/clothing/head/soft/sec/syndicate = 3,
 		/obj/item/clothing/head/beret/sec/syndicate = 3,

@@ -1,4 +1,4 @@
-/obj/item/organ/external/fluff
+/obj/item/organ/fluff
 	name = "fluff"
 	desc = "Real fluffy."
 	icon_state = "random_fly_1"
@@ -23,4 +23,4 @@
 	return draw_color
 
 /datum/bodypart_overlay/mutant/fluff/get_global_feature_list()
-	return GLOB.sprite_accessories["fluff"]
+	return SSaccessories.sprite_accessories["fluff"]
