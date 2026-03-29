@@ -17,7 +17,7 @@
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach/cybernetic/surplus,
 	)
 	var/list/possible_organ_slots = organ_slots.Copy()
-	if(HAS_TRAIT(human_holder, TRAIT_NOBLOOD))
+	if(!CAN_HAVE_BLOOD(human_holder))
 		possible_organ_slots -= ORGAN_SLOT_HEART
 	if(HAS_TRAIT(human_holder, TRAIT_NOBREATH))
 		possible_organ_slots -= ORGAN_SLOT_LUNGS
@@ -33,5 +33,5 @@
 		new_organ.Insert(human_holder, special = TRUE, movement_flags = DELETE_IF_REPLACED)
 
 /datum/quirk/tin_man/post_add()
-	to_chat(quirk_holder, span_boldannounce("Most of your internal organs have been replaced with surplus prosthetics. They are fragile and will easily come apart under duress. \
+	to_chat(quirk_holder, span_bolddanger("Most of your internal organs have been replaced with surplus prosthetics. They are fragile and will easily come apart under duress. \
 	Additionally, any EMP will make them stop working entirely."))

@@ -29,9 +29,16 @@
 /// Gets the sign of x, returns -1 if negative, 0 if 0, 1 if positive
 #define SIGN(x) ( ((x) > 0) - ((x) < 0) )
 
+/// Returns the integer closest to 0 from a division
+#define SIGNED_FLOOR_DIVISION(x, y) (SIGN(x) * FLOOR(abs(x) / y, 1))
+
 #define CEILING(x, y) ( -round(-(x) / (y)) * (y) )
 
 #define ROUND_UP(x) ( -round(-(x)))
+
+/// Probabilistic rounding: Adds 1 to the integer part of x with a probability equal to the decimal part of x.
+/// ie. ROUND_PROB(40.25) returns 40 with 75% probability, and 41 with 25% probability.
+#define ROUND_PROB(x) ( floor(x) + (prob(fract(x) * 100)) )
 
 /// Returns the number of digits in a number. Only works on whole numbers.
 /// This is marginally faster than string interpolation -> length
@@ -45,6 +52,9 @@
 
 /// Increments a value and wraps it if it exceeds some value. Can be used to circularly iterate through a list through `idx = WRAP_UP(idx, length_of_list)`.
 #define WRAP_UP(val, max) (((val) % (max)) + 1)
+
+/// Helper that increments and wraps the passed in number when it hits the integer limit
+#define WRAP_UID(val) WRAP_UP(val, SHORT_REAL_LIMIT - 1)
 
 // Real modulus that handles decimals
 #define MODULUS(x, y) ( (x) - FLOOR(x, y))
@@ -128,6 +138,9 @@
 // Will filter out extra rotations and negative rotations
 // E.g: 540 becomes 180. -180 becomes 180.
 #define SIMPLIFY_DEGREES(degrees) (MODULUS((degrees), 360))
+
+// 180s an angle
+#define REVERSE_ANGLE(degrees) (SIMPLIFY_DEGREES(degrees + 180))
 
 #define GET_ANGLE_OF_INCIDENCE(face, input) (MODULUS((face) - (input), 360))
 
@@ -223,6 +236,9 @@
 
 #define LORENTZ_DISTRIBUTION(x, s) ( s*tan(TODEGREES(PI*(rand()-0.5))) + x )
 #define LORENTZ_CUMULATIVE_DISTRIBUTION(x, y, s) ( (1/PI)*TORADIANS(arctan((x-(y))/s)) + 1/2 )
+/// Fucked up like upside down cauchy dist that I've pinned to 1 so I can use it as a multiplier
+/// https://www.desmos.com/calculator/bt4tfavvi7
+#define ANCHORED_INVERSE_CAUCHY(s) (2 - ( 1 / (s * (1 + ((rand() - 0.5) / s) ** 2 ))) * (s + (0.5 ** 2) / s))
 
 #define RULE_OF_THREE(a, b, x) ((a*x)/b)
 
@@ -237,7 +253,10 @@
 // This value per these many units. Very unnecessary but helpful for readability (For example wanting 30 units of synthflesh to heal 50 damage - VALUE_PER(50, 30))
 #define VALUE_PER(value, per) (value / per)
 
-#define GET_TRUE_DIST(a, b) (a == null || b == null) ? -1 : max(abs(a.x -b.x), abs(a.y-b.y), abs(a.z-b.z))
+#define GET_TRUE_DIST(a, b) ((a == null || b == null) ? -1 : max(abs(a.x -b.x), abs(a.y-b.y), abs(a.z-b.z)))
+
+/// Returns the distance between a and b fully ignoring multiz (normal get_dist counts a z move as 1 extra distance)
+#define GET_CARDINAL_DIST(a, b) ((a == null || b == null) ? -1 : max(abs(a.x -b.x), abs(a.y-b.y)))
 
 //We used to use linear regression to approximate the answer, but Mloc realized this was actually faster.
 //And lo and behold, it is, and it's more accurate to boot.

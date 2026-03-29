@@ -19,17 +19,19 @@
 		/obj/item/construction/rcd/tarkon,
 		/obj/item/gun/energy/recharge/resonant_system,
 	)
+	prereq_ids = list(TECHWEB_NODE_CONSTRUCTION)
 	design_ids = list(
 		"mod_plating_tarkon",
 		"arcs",
-		"rcd_tarkon"
+		"rcd_tarkon",
+		"tarkonbsc",
 	)
 	research_costs = list(TECHWEB_POINT_TYPE_GENERIC = TECHWEB_TIER_5_POINTS)
 	hidden = TRUE
 
 /datum/techweb_node/tarkonturret //Yes. Tarkon does not start with this unlocked.
 	id = TECHWEB_NODE_TARKON_DEFENSE
-	display_name = "Tarkon Industries Technology"
+	display_name = "Tarkon Industries Automated Turrets"
 	description = "Tarkon Industries Blackrust Salvage division's defense designs."
 	prereq_ids = list(TECHWEB_NODE_TARKON, TECHWEB_NODE_BASIC_ARMS, TECHWEB_NODE_AI)
 	design_ids = list(
@@ -50,7 +52,7 @@
 		/datum/material/plasma = HALF_SHEET_MATERIAL_AMOUNT,
 	)
 	research_icon_state = "tarkon-plating"
-	research_icon = 'modular_nova/modules/tarkon/icons/obj/mod_construct.dmi'
+	research_icon = 'modular_nova/master_files/icons/obj/clothing/modsuit/mod_construction.dmi'
 
 /datum/design/arcs
 	name = "A.R.C.S Resonator"
@@ -67,6 +69,21 @@
 	category = list(
 		RND_CATEGORY_TOOLS + RND_SUBCATEGORY_TOOLS_MINING
 	)
+
+/datum/design/tarkonbsc
+	name = "Tarkon BSC Refinery Box"
+	id = "tarkonbsc"
+	build_type = PROTOLATHE | AWAY_LATHE | AUTOLATHE
+	materials = list(
+		/datum/material/iron = SHEET_MATERIAL_AMOUNT * 5,
+		/datum/material/plasma = SHEET_MATERIAL_AMOUNT * 3,
+		/datum/material/titanium = SHEET_MATERIAL_AMOUNT * 3,
+	)
+	build_path = /obj/item/flatpacked_machine/boulder_collector/tarkon
+	category = list(
+		RND_CATEGORY_TOOLS + RND_SUBCATEGORY_TOOLS_MINING
+	)
+	departmental_flags = DEPARTMENT_BITFLAG_CARGO
 
 /datum/design/tarkonrcd
 	name = "Tarkon R.C.D"
@@ -157,13 +174,14 @@
 	. = ..()
 	. += span_notice("You can use <b>research notes</b> on this to generate research points.")
 
-/obj/machinery/rnd/server/tarkon/attackby(obj/item/attacking_item, mob/user, params)
-	if(istype(attacking_item, /obj/item/research_notes) && stored_research)
-		var/obj/item/research_notes/research_notes = attacking_item
+/obj/machinery/rnd/server/tarkon/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	if(istype(tool, /obj/item/research_notes) && stored_research)
+		var/obj/item/research_notes/research_notes = tool
 		stored_research.add_point_list(list(TECHWEB_POINT_TYPE_GENERIC = research_notes.value))
 		playsound(src, 'sound/machines/copier.ogg', 50, TRUE)
 		qdel(research_notes)
-		return
+		return ITEM_INTERACT_SUCCESS
+
 	return ..()
 
 /obj/machinery/rnd/production/protolathe/tarkon

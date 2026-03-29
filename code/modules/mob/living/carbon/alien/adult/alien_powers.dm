@@ -8,7 +8,6 @@ Doesn't work on other aliens/AI.*/
 
 /datum/action/cooldown/alien
 	name = "Alien Power"
-	panel = "Alien"
 	background_icon_state = "bg_alien"
 	overlay_icon_state = "bg_alien_border"
 	button_icon = 'icons/mob/actions/actions_xeno.dmi'
@@ -16,6 +15,12 @@ Doesn't work on other aliens/AI.*/
 	check_flags = AB_CHECK_IMMOBILE | AB_CHECK_CONSCIOUS | AB_CHECK_INCAPACITATED
 	/// How much plasma this action uses.
 	var/plasma_cost = 0
+
+/datum/action/cooldown/alien/New(Target)
+	. = ..()
+	//not free
+	if(plasma_cost != 0)
+		name = "[initial(name)] ([plasma_cost]P)"
 
 /datum/action/cooldown/alien/IsAvailable(feedback = FALSE)
 	. = ..()
@@ -48,13 +53,6 @@ Doesn't work on other aliens/AI.*/
 		unset_click_ability(owner, refund_cooldown = FALSE)
 
 	return TRUE
-
-/datum/action/cooldown/alien/set_statpanel_format()
-	. = ..()
-	if(!islist(.))
-		return
-
-	.[PANEL_DISPLAY_STATUS] = "PLASMA - [plasma_cost]"
 
 /datum/action/cooldown/alien/make_structure
 	/// The type of structure the action makes on use
@@ -224,7 +222,7 @@ Doesn't work on other aliens/AI.*/
 	if(get_dist(owner, target) > 1)
 		return FALSE
 	if(ismob(target)) //If it could corrode mobs, it would one-shot them.
-		owner.balloon_alert(owner, "doesn't work on mobs!")
+		owner.balloon_alert(owner, "doesn't work on creatures!")
 		return FALSE
 
 	return ..()
@@ -282,22 +280,22 @@ Doesn't work on other aliens/AI.*/
 // We do this in InterceptClickOn() instead of Activate()
 // because we use the click parameters for aiming the projectile
 // (or something like that)
-/datum/action/cooldown/alien/acid/neurotoxin/InterceptClickOn(mob/living/caller, params, atom/target)
+/datum/action/cooldown/alien/acid/neurotoxin/InterceptClickOn(mob/living/clicker, params, atom/target)
 	. = ..()
 	if(!.)
-		unset_click_ability(caller, refund_cooldown = FALSE)
+		unset_click_ability(clicker, refund_cooldown = FALSE)
 		return FALSE
 
 	var/modifiers = params2list(params)
-	caller.visible_message(
-		span_danger("[caller] spits neurotoxin!"),
+	clicker.visible_message(
+		span_danger("[clicker] spits neurotoxin!"),
 		span_alertalien("You spit neurotoxin."),
 	)
-	var/obj/projectile/neurotoxin/neurotoxin = new /obj/projectile/neurotoxin(caller.loc)
-	neurotoxin.preparePixelProjectile(target, caller, modifiers)
-	neurotoxin.firer = caller
+	var/obj/projectile/neurotoxin/neurotoxin = new /obj/projectile/neurotoxin(clicker.loc)
+	neurotoxin.aim_projectile(target, clicker, modifiers)
+	neurotoxin.firer = clicker
 	neurotoxin.fire()
-	caller.newtonian_move(get_angle(target, caller))
+	clicker.newtonian_move(get_angle(target, clicker))
 	return TRUE
 
 // Has to return TRUE, otherwise is skipped.
@@ -349,7 +347,6 @@ Doesn't work on other aliens/AI.*/
 
 /datum/action/cooldown/mob_cooldown/sneak/alien
 	name = "Alien Sentinel Sneak"
-	panel = "Alien"
 	desc = "Blend into the shadows to stalk your prey."
 	button_icon = 'icons/mob/actions/actions_xeno.dmi'
 	button_icon_state = "alien_sneak"

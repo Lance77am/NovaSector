@@ -12,7 +12,7 @@
 	var/require_model = FALSE
 	var/list/model_type = null
 	/// Bitflags listing model compatibility. Used in the exosuit fabricator for creating sub-categories.
-	var/list/model_flags = NONE
+	var/model_flags = NONE
 
 	/// List of items to add with the module, if any
 	var/list/items_to_add
@@ -67,7 +67,7 @@
 	for(var/item_to_remove in items)
 		var/obj/item/module_item = locate(item_to_remove) in borg.model.modules
 		if (module_item)
-			borg.model.remove_module(module_item, TRUE)
+			borg.model.remove_module(module_item)
 	return TRUE
 
 /obj/item/borg/upgrade/rename
@@ -162,8 +162,8 @@
 	model_type = list(/obj/item/robot_model/miner)
 	model_flags = BORG_MODEL_MINER
 
-	items_to_add = list(/obj/item/pickaxe/drill/cyborg/diamond)
-	items_to_remove = list(/obj/item/pickaxe/drill/cyborg, /obj/item/shovel)
+	items_to_add = list(/obj/item/pickaxe/drill/diamonddrill)
+	items_to_remove = list(/obj/item/pickaxe/drill, /obj/item/shovel)
 
 /obj/item/borg/upgrade/soh
 	name = "mining cyborg satchel of holding"
@@ -185,7 +185,7 @@
 	model_flags = BORG_MODEL_JANITOR
 
 	items_to_add = list(/obj/item/storage/bag/trash/bluespace/cyborg)
-	items_to_remove = list(/obj/item/storage/bag/trash/cyborg)
+	items_to_remove = list(/obj/item/storage/bag/trash)
 
 /obj/item/borg/upgrade/amop
 	name = "janitor cyborg advanced mop"
@@ -195,8 +195,8 @@
 	model_type = list(/obj/item/robot_model/janitor)
 	model_flags = BORG_MODEL_JANITOR
 
-	items_to_add = list(/obj/item/mop/advanced/cyborg)
-	items_to_remove = list(/obj/item/mop/cyborg)
+	items_to_add = list(/obj/item/mop/advanced)
+	items_to_remove = list(/obj/item/mop)
 
 /obj/item/borg/upgrade/prt
 	name = "janitor cyborg plating repair tool"
@@ -216,7 +216,7 @@
 	model_type = list(/obj/item/robot_model/janitor)
 	model_flags = BORG_MODEL_JANITOR
 
-	items_to_add = list(/obj/item/plunger/cyborg)
+	items_to_add = list(/obj/item/plunger)
 
 /obj/item/borg/upgrade/high_capacity_light_replacer
 	name = "janitor cyborg high capacity replacer"
@@ -226,8 +226,8 @@
 	model_type = list(/obj/item/robot_model/janitor)
 	model_flags = BORG_MODEL_JANITOR
 
-	items_to_add = list (/obj/item/lightreplacer/cyborg/advanced)
-	items_to_remove = list(/obj/item/lightreplacer/cyborg)
+	items_to_add = list (/obj/item/lightreplacer/advanced)
+	items_to_remove = list(/obj/item/lightreplacer)
 
 /obj/item/borg/upgrade/syndicate
 	name = "illegal equipment module"
@@ -359,8 +359,8 @@
 			else
 				repair_amount = -1
 				energy_cost = 0.01 * STANDARD_CELL_CHARGE
-			cyborg.adjustBruteLoss(repair_amount)
-			cyborg.adjustFireLoss(repair_amount)
+			cyborg.adjust_brute_loss(repair_amount)
+			cyborg.adjust_fire_loss(repair_amount)
 			cyborg.updatehealth()
 			cyborg.cell.use(energy_cost)
 		else
@@ -419,15 +419,18 @@
 		return .
 	var/found_hypo = FALSE
 	for(var/obj/item/reagent_containers/borghypo/hypo in borg.model.modules)
-		hypo.bypass_protection = TRUE
-		found_hypo = TRUE
-	for(var/obj/item/reagent_containers/borghypo/hypo in borg.model.emag_modules)
+		if(!hypo.allow_piercing)
+			continue
 		hypo.bypass_protection = TRUE
 		found_hypo = TRUE
 
 	if(!found_hypo)
 		to_chat(user, span_warning("There are no installed hypospray modules to upgrade with piercing!")) //check to see if any hyposprays were upgraded
 		return FALSE
+
+	// If we are actually going to install the upgrade due to the presence of compatible modules, make sure their emagged counterparts get upgraded too.
+	for(var/obj/item/reagent_containers/borghypo/hypo in borg.model.emag_modules)
+		hypo.bypass_protection = TRUE
 
 /obj/item/borg/upgrade/piercing_hypospray/deactivate(mob/living/silicon/robot/borg, mob/living/user = usr)
 	. = ..()
@@ -609,9 +612,7 @@
 	var/prev_lockcharge = borg.lockcharge
 	borg.SetLockdown(TRUE)
 	borg.set_anchored(TRUE)
-	var/datum/effect_system/fluid_spread/smoke/smoke = new
-	smoke.set_up(1, holder = borg, location = borg.loc)
-	smoke.start()
+	do_smoke(1, borg, borg.loc)
 	sleep(0.2 SECONDS)
 	for(var/i in 1 to 4)
 		playsound(borg, pick(
@@ -638,14 +639,35 @@
 		borg.update_transform(0.8) // NOVA EDIT CHANGE - ORIGINAL: borg.update_transform(0.5)
 
 /obj/item/borg/upgrade/rped
-	name = "engineering cyborg RPED"
-	desc = "A rapid part exchange device for the engineering cyborg."
+	name = "engineering cyborg RPED (expanded)"
+	desc = "An expanded rapid part exchange device for the engineering cyborg."
 	icon_state = "module_engineer"
 	require_model = TRUE
 	model_type = list(/obj/item/robot_model/engineering, /obj/item/robot_model/saboteur)
 	model_flags = BORG_MODEL_ENGINEERING
 
 	items_to_add = list(/obj/item/storage/part_replacer/cyborg)
+
+/obj/item/borg/upgrade/smallrped
+	name = "engineering cyborg RPED"
+	desc = "A regular version of rapid part exchange device for the engineering cyborg."
+	icon_state = "module_engineer"
+	require_model = TRUE
+	model_type = list(/obj/item/robot_model/engineering, /obj/item/robot_model/saboteur)
+	model_flags = BORG_MODEL_ENGINEERING
+	items_to_add = list(/obj/item/storage/part_replacer/cyborg/small)
+
+/obj/item/borg/upgrade/rped/action(mob/living/silicon/robot/borg, mob/living/user = usr)
+	. = ..()
+	if(!.)
+		return .
+	var/obj/item/borg/upgrade/smallrped/upgrade = locate() in borg
+	var/obj/item/storage/part_replacer/cyborg/small/replacer = locate() in borg.model.modules
+	if(upgrade)
+		to_chat(user, span_notice("The old RPED module is now expanded and gets more space"))
+		replacer.emptyStorage()
+		replacer.forceMove(get_turf(borg))
+		qdel(upgrade)
 
 /obj/item/borg/upgrade/inducer
 	name = "engineering integrated power inducer"
@@ -654,23 +676,7 @@
 	require_model = TRUE
 	model_type = list(/obj/item/robot_model/engineering, /obj/item/robot_model/saboteur)
 	model_flags = BORG_MODEL_ENGINEERING
-
 	items_to_add = list(/obj/item/inducer/cyborg)
-
-/obj/item/inducer/cyborg
-	name = "Internal inducer"
-	icon = 'icons/obj/tools.dmi'
-	icon_state = "inducer-engi"
-	powerdevice = null
-
-/obj/item/inducer/cyborg/get_cell()
-	var/obj/item/robot_model/possible_model = loc
-	var/mob/living/silicon/robot/silicon_friend = istype(possible_model) ? possible_model.robot : possible_model
-	if(istype(silicon_friend))
-		. = silicon_friend.cell
-
-/obj/item/inducer/cyborg/screwdriver_act(mob/living/user, obj/item/tool)
-	return NONE
 
 /obj/item/borg/upgrade/pinpointer
 	name = "medical cyborg crew pinpointer"
@@ -689,7 +695,7 @@
 		return .
 	crew_monitor = new /datum/action/item_action/crew_monitor(src)
 	crew_monitor.Grant(borg)
-	icon_state = "scanner"
+	icon_state = "crew_monitor"
 
 
 /obj/item/borg/upgrade/pinpointer/deactivate(mob/living/silicon/robot/borg, mob/living/user = usr)
@@ -711,7 +717,7 @@
 
 /obj/item/borg/upgrade/transform
 	name = "borg model picker (Standard)"
-	desc = "Allows you to to turn a cyborg into a standard cyborg."
+	desc = "Allows you to turn a cyborg into a standard cyborg."
 	icon_state = "module_general"
 	var/obj/item/robot_model/new_model = null
 
@@ -722,19 +728,19 @@
 
 /obj/item/borg/upgrade/transform/clown
 	name = "borg model picker (Clown)"
-	desc = "Allows you to to turn a cyborg into a clown, honk."
+	desc = "Allows you to turn a cyborg into a clown, honk."
 	icon_state = "module_honk"
 	new_model = /obj/item/robot_model/clown
 
-/obj/item/borg/upgrade/circuit_app
-	name = "circuit manipulation apparatus"
-	desc = "An engineering cyborg upgrade allowing for manipulation of circuit boards."
+/obj/item/borg/upgrade/engineering_app
+	name = "engineering manipulation apparatus"
+	desc = "An engineering cyborg upgrade allowing for manipulation of circuit boards and other engineering matter."
 	icon_state = "module_engineer"
 	require_model = TRUE
 	model_type = list(/obj/item/robot_model/engineering, /obj/item/robot_model/saboteur)
 	model_flags = BORG_MODEL_ENGINEERING
 
-	items_to_add = list(/obj/item/borg/apparatus/circuit)
+	items_to_add = list(/obj/item/borg/apparatus/engineering)
 
 /obj/item/borg/upgrade/beaker_app
 	name = "beaker storage apparatus"
@@ -745,6 +751,17 @@
 	model_flags = BORG_MODEL_MEDICAL
 
 	items_to_add = list(/obj/item/borg/apparatus/beaker/extra)
+
+/obj/item/borg/upgrade/bs_syringe
+	name = "advanced syringe"
+	desc = "Bluespace technology that expands capacity of your standard cyborg syringe."
+	icon_state = "module_medical"
+	require_model = TRUE
+	model_type = list(/obj/item/robot_model/medical)
+	model_flags = BORG_MODEL_MEDICAL
+
+	items_to_add = list(/obj/item/reagent_containers/syringe/bluespace)
+	items_to_remove = list(/obj/item/reagent_containers/syringe)
 
 /obj/item/borg/upgrade/drink_app
 	name = "glass storage apparatus"
@@ -764,7 +781,7 @@
 	model_type = list(/obj/item/robot_model/janitor)
 	model_flags = BORG_MODEL_JANITOR
 
-	items_to_add = list(/obj/item/pushbroom/cyborg)
+	items_to_add = list(/obj/item/pushbroom)
 
 /obj/item/borg/upgrade/condiment_synthesizer
 	name = "Service Cyborg Condiment Synthesiser"
@@ -826,6 +843,16 @@
 
 	items_to_add = list(/obj/item/storage/bag/plants/cyborg, /obj/item/borg/cyborg_omnitool/botany, /obj/item/plant_analyzer)
 
+/obj/item/borg/upgrade/shuttle_blueprints
+	name = "Engineering Cyborg Shuttle Blueprint Database"
+	desc = "An upgrade to the engineering model cyborg allowing for the construction and expansion of shuttles."
+	icon_state = "module_engineer"
+	require_model = TRUE
+	model_type = list(/obj/item/robot_model/engineering, /obj/item/robot_model/saboteur)
+	model_flags = BORG_MODEL_ENGINEERING
+
+	items_to_add = list(/obj/item/shuttle_blueprints/borg)
+
 
 ///This isn't an upgrade or part of the same path, but I'm gonna just stick it here because it's a tool used on cyborgs.
 //A reusable tool that can bring borgs back to life. They gotta be repaired first, though.
@@ -836,7 +863,7 @@
 	icon = 'icons/obj/devices/circuitry_n_data.dmi'
 	icon_state = "cyborg_upgrade1"
 
-/obj/item/borg_restart_board/pre_attack(mob/living/silicon/robot/borgo, mob/living/user, params)
+/obj/item/borg_restart_board/pre_attack(mob/living/silicon/robot/borgo, mob/living/user, list/modifiers, list/attack_modifiers)
 	if(!istype(borgo))
 		return ..()
 	if(!borgo.opened)

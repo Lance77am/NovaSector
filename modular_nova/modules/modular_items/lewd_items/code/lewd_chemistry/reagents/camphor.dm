@@ -7,7 +7,6 @@
 	taste_description = "dull bitterness"
 	taste_mult = 2
 	color = "#D9D9D9"
-	reagent_state = SOLID
 	overdose_threshold = 25 // OD will reset sizes of genitals back to normal.
 	life_pref_datum = /datum/preference/toggle/erp/aphro
 	arousal_adjust_amount = -12
@@ -82,7 +81,7 @@
 		exposed_mob.update_body()
 
 // Notify the user that they're overdosing. Doesn't affect their mood.
-/datum/reagent/drug/aphrodisiac/camphor/overdose_start(mob/living/carbon/human/exposed_mob)
+/datum/reagent/drug/aphrodisiac/camphor/overdose_start(mob/living/carbon/human/exposed_mob, metabolization_ratio)
 	to_chat(exposed_mob, span_userdanger("You feel like you took too much [name]!"))
 	exposed_mob.add_mood_event("[type]_overdose", /datum/mood_event/minor_overdose, name)
 

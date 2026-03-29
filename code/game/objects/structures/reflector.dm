@@ -5,6 +5,7 @@
 	desc = "A base for reflector assemblies."
 	anchored = FALSE
 	density = FALSE
+	custom_materials = list(/datum/material/iron = SHEET_MATERIAL_AMOUNT * 5)
 	var/deflector_icon_state
 	var/mutable_appearance/deflector_overlay
 	var/finished = FALSE
@@ -36,9 +37,7 @@
 	if(admin)
 		can_rotate = FALSE
 
-	AddComponent(/datum/component/usb_port, list(
-		/obj/item/circuit_component/reflector,
-	))
+	AddComponent(/datum/component/usb_port, typecacheof(list(/obj/item/circuit_component/reflector), only_root_path = TRUE))
 
 /obj/structure/reflector/examine(mob/user)
 	. = ..()
@@ -75,8 +74,8 @@
 
 /obj/structure/reflector/proc/auto_reflect(obj/projectile/proj, pdir, turf/ploc, pangle)
 	proj.ignore_source_check = TRUE
-	proj.range = proj.decayedRange
-	proj.decayedRange = max(proj.decayedRange--, 0)
+	proj.range = proj.maximum_range
+	proj.maximum_range = max(proj.maximum_range--, 0)
 	return BULLET_ACT_FORCE_PIERCE
 
 /obj/structure/reflector/tool_act(mob/living/user, obj/item/tool, list/modifiers)
@@ -96,7 +95,7 @@
 		return ITEM_INTERACT_SUCCESS
 	user.visible_message(span_notice("[user] starts to dismantle [src]."), span_notice("You start to dismantle [src]..."))
 	if(!tool.use_tool(src, user, 8 SECONDS, volume=50))
-		return
+		return ITEM_INTERACT_BLOCKING
 	to_chat(user, span_notice("You dismantle [src]."))
 	new framebuildstacktype(drop_location(), framebuildstackamount)
 	if(buildstackamount)
@@ -106,7 +105,7 @@
 
 /obj/structure/reflector/welder_act(mob/living/user, obj/item/tool)
 	if(!tool.tool_start_check(user, amount=1))
-		return
+		return ITEM_INTERACT_BLOCKING
 	if(atom_integrity < max_integrity)
 		user.visible_message(span_notice("[user] starts to repair [src]."),
 							span_notice("You begin repairing [src]..."),
@@ -132,7 +131,7 @@
 
 	return ITEM_INTERACT_SUCCESS
 
-/obj/structure/reflector/attackby(obj/item/W, mob/user, params)
+/obj/structure/reflector/attackby(obj/item/W, mob/user, list/modifiers, list/attack_modifiers)
 	if(admin)
 		return
 	//Finishing the frame
@@ -196,7 +195,7 @@
 	if(abs(incidence) > 90 && abs(incidence) < 270)
 		return FALSE
 	var/new_angle = SIMPLIFY_DEGREES(rotation_angle + incidence)
-	proj.set_angle_centered(new_angle)
+	proj.set_angle_centered(loc, new_angle)
 	return ..()
 
 //DOUBLE
@@ -209,6 +208,7 @@
 	finished = TRUE
 	buildstacktype = /obj/item/stack/sheet/rglass
 	buildstackamount = 10
+	custom_materials = list(/datum/material/iron = SHEET_MATERIAL_AMOUNT * 10, /datum/material/glass = SHEET_MATERIAL_AMOUNT * 10)
 
 /obj/structure/reflector/double/anchored
 	anchored = TRUE
@@ -220,7 +220,8 @@
 /obj/structure/reflector/double/auto_reflect(obj/projectile/proj, pdir, turf/ploc, pangle)
 	var/incidence = GET_ANGLE_OF_INCIDENCE(rotation_angle, (proj.angle + 180))
 	var/new_angle = SIMPLIFY_DEGREES(rotation_angle + incidence)
-	proj.set_angle_centered(new_angle)
+	proj.forceMove(loc)
+	proj.set_angle_centered(loc, new_angle)
 	return ..()
 
 //BOX
@@ -233,6 +234,7 @@
 	finished = TRUE
 	buildstacktype = /obj/item/stack/sheet/mineral/diamond
 	buildstackamount = 1
+	custom_materials = list(/datum/material/iron = SHEET_MATERIAL_AMOUNT * 10, /datum/material/diamond = SHEET_MATERIAL_AMOUNT)
 
 /obj/structure/reflector/box/anchored
 	anchored = TRUE
@@ -241,8 +243,8 @@
 	admin = TRUE
 	anchored = TRUE
 
-/obj/structure/reflector/box/auto_reflect(obj/projectile/P)
-	P.set_angle_centered(rotation_angle)
+/obj/structure/reflector/box/auto_reflect(obj/projectile/proj)
+	proj.set_angle_centered(loc, rotation_angle)
 	return ..()
 
 /obj/structure/reflector/ex_act()
@@ -291,6 +293,7 @@
 		return
 	if(!can_rotate)
 		user.balloon_alert(user, "can't rotate!")
+		ui?.close()
 		return
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)

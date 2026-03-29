@@ -6,11 +6,11 @@
 	icon_state = "blacktumor"
 	var/causes_damage = TRUE
 	var/datum/species/old_species = /datum/species/human
-	var/living_transformation_time = 30
+	var/living_transformation_time = 3 SECONDS
 	var/converts_living = FALSE
 
-	var/revive_time_min = 450
-	var/revive_time_max = 700
+	var/revive_time_min = 45 SECONDS
+	var/revive_time_max = 70 SECONDS
 	var/timer_id
 
 /obj/item/organ/zombie_infection/Initialize(mapload)
@@ -23,26 +23,25 @@
 	GLOB.zombie_infection_list -= src
 	. = ..()
 
-/obj/item/organ/zombie_infection/on_mob_insert(mob/living/carbon/M, special = FALSE, movement_flags)
-	. = ..()
+/obj/item/organ/zombie_infection/feel_for_damage(self_aware)
+	// keep stealthy for now, revisit later
+	return ""
 
+/obj/item/organ/zombie_infection/on_mob_insert(mob/living/carbon/new_owner, special = FALSE, movement_flags)
+	. = ..()
+	RegisterSignal(new_owner, COMSIG_LIVING_DEATH, PROC_REF(organ_owner_died))
 	START_PROCESSING(SSobj, src)
 
-/obj/item/organ/zombie_infection/on_mob_remove(mob/living/carbon/M, special = FALSE)
+/obj/item/organ/zombie_infection/on_mob_remove(mob/living/carbon/new_owner, special = FALSE, movement_flags)
 	. = ..()
 	STOP_PROCESSING(SSobj, src)
-	if(iszombie(M) && old_species && !special)
-		M.set_species(old_species)
+	if(iszombie(new_owner) && old_species && !special)
+		// There isn't a clean way to change species during organ or bodypart removals. In lieau of a beter solution, this will do
+		spawn(0)
+			new_owner.set_species(old_species)
 	if(timer_id)
 		deltimer(timer_id)
-
-/obj/item/organ/zombie_infection/on_mob_insert(mob/living/carbon/organ_owner, special)
-	. = ..()
-	RegisterSignal(organ_owner, COMSIG_LIVING_DEATH, PROC_REF(organ_owner_died))
-
-/obj/item/organ/zombie_infection/on_mob_remove(mob/living/carbon/organ_owner, special)
-	. = ..()
-	UnregisterSignal(organ_owner, COMSIG_LIVING_DEATH)
+	UnregisterSignal(new_owner, COMSIG_LIVING_DEATH)
 
 /obj/item/organ/zombie_infection/proc/organ_owner_died(mob/living/carbon/source, gibbed)
 	SIGNAL_HANDLER
@@ -54,7 +53,7 @@
 		web of pus and viscera, bound tightly around the brain like some \
 		biological harness."))
 
-/obj/item/organ/zombie_infection/process(seconds_per_tick, times_fired)
+/obj/item/organ/zombie_infection/process(seconds_per_tick)
 	if(!owner)
 		return
 	if(!(src in owner.organs))
@@ -62,7 +61,7 @@
 	if(owner.mob_biotypes & MOB_MINERAL)//does not process in inorganic things
 		return
 	if (causes_damage && !iszombie(owner) && owner.stat != DEAD)
-		owner.adjustToxLoss(0.5 * seconds_per_tick)
+		owner.adjust_tox_loss(0.5 * seconds_per_tick)
 		if (SPT_PROB(5, seconds_per_tick))
 			to_chat(owner, span_danger("You feel sick..."))
 	if(timer_id || HAS_TRAIT(owner, TRAIT_SUICIDED) || !owner.get_organ_by_type(/obj/item/organ/brain))

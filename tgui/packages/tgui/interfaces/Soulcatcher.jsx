@@ -1,5 +1,4 @@
 // THIS IS A NOVA SECTOR UI FILE
-import { useBackend } from '../backend';
 import {
   BlockQuote,
   Box,
@@ -10,7 +9,9 @@ import {
   LabeledList,
   ProgressBar,
   Section,
-} from '../components';
+} from 'tgui-core/components';
+
+import { useBackend } from '../backend';
 import { Window } from '../layouts';
 
 export const Soulcatcher = (props) => {
@@ -163,7 +164,7 @@ export const Soulcatcher = (props) => {
                         buttons={
                           <>
                             {soul.scan_needed ? (
-                              <> </>
+                              null
                             ) : (
                               <>
                                 <Button
@@ -364,7 +365,7 @@ export const Soulcatcher = (props) => {
                               </LabeledList.Item>
                             </>
                           ) : (
-                            <> </>
+                            null
                           )}
                           <LabeledList.Item label="Rename">
                             <Button
@@ -402,7 +403,7 @@ export const Soulcatcher = (props) => {
                 </Flex>
               </>
             ) : (
-              <> </>
+              null
             )}
           </Section>
         ))}
@@ -419,7 +420,7 @@ export const Soulcatcher = (props) => {
             </ProgressBar>
           </Section>
         ) : (
-          <> </>
+          null
         )}
         <Button
           fluid
@@ -456,7 +457,7 @@ export const Soulcatcher = (props) => {
             Remove soulcatcher from parent object
           </Button>
         ) : (
-          <> </>
+          null
         )}
       </Window.Content>
     </Window>

@@ -69,7 +69,7 @@
 /obj/effect/portal/newtonian_move(inertia_angle, instant = FALSE, start_delay = 0, drift_force = 0, controlled_cap = null)
 	return TRUE
 
-/obj/effect/portal/attackby(obj/item/W, mob/user, params)
+/obj/effect/portal/attackby(obj/item/W, mob/user, list/modifiers, list/attack_modifiers)
 	if(user && Adjacent(user))
 		teleport(user)
 		return TRUE
@@ -135,10 +135,10 @@
 		return ..()
 	return BULLET_ACT_FORCE_PIERCE
 
-/obj/effect/portal/bullet_act(obj/projectile/hitting_projectile, def_zone, piercing_hit)
-	if (!teleport(hitting_projectile, force = TRUE))
-		return ..()
-	return BULLET_ACT_FORCE_PIERCE
+/obj/effect/portal/projectile_hit(obj/projectile/hitting_projectile, def_zone, piercing_hit, blocked)
+	if (teleport(hitting_projectile, force = TRUE))
+		return BULLET_ACT_FORCE_PIERCE
+	return ..()
 
 /obj/effect/portal/proc/teleport(atom/movable/moving, force = FALSE)
 	if(!force && (!istype(moving) || iseffect(moving) || (ismecha(moving) && !mech_sized) || (!isobj(moving) && !ismob(moving)))) //Things that shouldn't teleport.
@@ -146,6 +146,7 @@
 	var/turf/real_target = get_link_target_turf()
 	if(!istype(real_target))
 		return FALSE
+
 	if(!force && (!ismecha(moving) && !isprojectile(moving) && moving.anchored && !allow_anchored))
 		return
 	var/no_effect = FALSE
@@ -156,8 +157,8 @@
 	var/turf/start_turf = get_turf(moving)
 	if(do_teleport(moving, real_target, innate_accuracy_penalty, no_effects = no_effect, channel = teleport_channel, forced = force_teleport))
 		if(isprojectile(moving))
-			var/obj/projectile/P = moving
-			P.ignore_source_check = TRUE
+			var/obj/projectile/proj = moving
+			proj.ignore_source_check = TRUE
 		new /obj/effect/temp_visual/portal_animation(start_turf, src, moving)
 		playsound(start_turf, SFX_PORTAL_ENTER, 50, TRUE, SHORT_RANGE_SOUND_EXTRARANGE)
 		playsound(real_target, SFX_PORTAL_ENTER, 50, TRUE, SHORT_RANGE_SOUND_EXTRARANGE)

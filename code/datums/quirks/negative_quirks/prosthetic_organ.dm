@@ -29,7 +29,7 @@
 		preferred_organ = GLOB.organ_choice[pick(GLOB.organ_choice)]
 
 	var/list/possible_organ_slots = organ_slots.Copy()
-	if(HAS_TRAIT(human_holder, TRAIT_NOBLOOD))
+	if(!CAN_HAVE_BLOOD(human_holder))
 		possible_organ_slots -= ORGAN_SLOT_HEART
 	if(HAS_TRAIT(human_holder, TRAIT_NOBREATH))
 		possible_organ_slots -= ORGAN_SLOT_LUNGS
@@ -65,7 +65,7 @@
 	STOP_PROCESSING(SSobj, old_organ)
 
 /datum/quirk/prosthetic_organ/post_add()
-	to_chat(quirk_holder, span_boldannounce("Your [slot_string] has been replaced with a surplus organ. It is weak and highly unstable. \
+	to_chat(quirk_holder, span_bolddanger("Your [slot_string] has been replaced with a surplus organ. It is weak and highly unstable. \
 	Additionally, any EMP will make it stop working entirely."))
 
 /datum/quirk/prosthetic_organ/remove()

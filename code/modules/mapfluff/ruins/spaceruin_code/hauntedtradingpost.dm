@@ -85,6 +85,7 @@
 /obj/structure/aquarium/donkfish
 	name = "office aquarium"
 	desc = "A home for captive fish. This one has 'DONK CO' engraved on the glass."
+	init_mode = AQUARIUM_MODE_SAFE
 
 /obj/structure/aquarium/donkfish/Initialize(mapload)
 	. = ..()
@@ -92,8 +93,6 @@
 	new /obj/item/aquarium_prop/seaweed(src)
 	new /obj/item/fish/donkfish(src)
 	new /obj/item/fish/donkfish(src)
-	create_reagents(20, SEALED_CONTAINER)
-	reagents.add_reagent(/datum/reagent/consumable/nutriment, 20)
 
 //gimmick ketchup bottle for healing minor injuries
 /obj/item/reagent_containers/condiment/donksauce
@@ -171,6 +170,9 @@
 	)
 	AddElement(/datum/element/connect_loc, loc_connections)
 
+/obj/machinery/button/door/invisible_tripwire/find_and_mount_on_atom(mark_for_late_init, late_init)
+	return //these exist independently on an turf
+
 /obj/machinery/button/door/invisible_tripwire/post_machine_initialize()
 	. = ..()
 	if(!suicide_pact || isnull(SSqueuelinks.queues[suicide_pact_id]))
@@ -245,7 +247,7 @@
 	//is this being used as part of the haunted trading post ruin? if true, will self destruct when boss dies
 	var/donk_ai_slave = FALSE
 	// machine that the trap inhabits
-	var/obj/structure/host_machine
+	var/obj/machinery/host_machine
 	// turf that the trap is on
 	var/turf/my_turf
 	//how long until trap zaps everything, after it detects something
@@ -326,7 +328,7 @@
 	desc = "A ballistic machine gun auto-turret with Donk Co. branding. It uses 9mm rounds."
 	armor_type = /datum/armor/donk_turret
 	scan_range = 6
-	shot_delay = 10
+	shot_delay = 1 SECONDS
 
 /datum/armor/donk_turret
 	melee = 20
@@ -353,7 +355,7 @@
 	desc = "An energy gun auto-turret with Cybersun branding. It fires high-energy plasma beams that do a lot of damage, but it can be fairly slow."
 	armor_type = /datum/armor/syndicate_shuttle
 	scan_range = 6
-	shot_delay = 50
+	shot_delay = 5 SECONDS
 	always_up = FALSE
 	has_cover = TRUE
 

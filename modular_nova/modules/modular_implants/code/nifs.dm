@@ -14,7 +14,7 @@
 // This is the original NIF that other NIFs are based on.
 /obj/item/organ/cyberimp/brain/nif
 	name = "Nanite Implant Framework"
-	desc = "A brain implant that infuses the user with nanites."
+	desc = "A brain implant that infuses the user with nanites, and exposes a neuroware chip slot."
 	icon = 'modular_nova/modules/modular_implants/icons/obj/nifs.dmi'
 	icon_state = "base_nif"
 	w_class = WEIGHT_CLASS_NORMAL
@@ -90,11 +90,11 @@
 	///How many programs can the NIF store at once?
 	var/max_nifsofts = 5
 	///What programs are currently loaded onto the NIF?
-	var/list/loaded_nifsofts = list()
+	var/list/loaded_nifsofts
 	///What programs come already installed on the NIF?
 	var/list/preinstalled_nifsofts = list(/datum/nifsoft/soul_poem)
 	///What programs do we want to carry between rounds?
-	var/list/persistent_nifsofts = list()
+	var/list/persistent_nifsofts
 	///This shows up in the NIF settings screen as a way to ICly display lore.
 	var/manufacturer_notes = "There is no data currently avalible for this product."
 
@@ -124,13 +124,13 @@
 
 	linked_mob = null
 
-	QDEL_LIST(loaded_nifsofts)
+	QDEL_LAZYLIST(loaded_nifsofts)
 	return ..()
 
-/obj/item/organ/cyberimp/brain/nif/mob_insert(mob/living/carbon/human/insertee, special = FALSE, movement_flags = DELETE_IF_REPLACED)
+/obj/item/organ/cyberimp/brain/nif/on_mob_insert(mob/living/carbon/human/insertee, special = FALSE, movement_flags = DELETE_IF_REPLACED)
 	. = ..()
 
-	if(linked_mob && stored_ckey != insertee.ckey && theft_protection)
+	if(stored_ckey && stored_ckey != insertee.ckey && theft_protection)
 		insertee.audible_message(span_warning("[src] lets out a negative buzz before forcefully removing itself from [insertee]'s brain."))
 		playsound(insertee, 'sound/machines/buzz/buzz-sigh.ogg', 30, TRUE)
 		Remove(insertee)
@@ -154,7 +154,7 @@
 		send_message("Loading preinstalled and stored NIFSofts, please wait...")
 		addtimer(CALLBACK(src, PROC_REF(install_preinstalled_nifsofts)), 3 SECONDS)
 
-/obj/item/organ/cyberimp/brain/nif/mob_remove(mob/living/carbon/organ_owner, special = FALSE)
+/obj/item/organ/cyberimp/brain/nif/on_mob_remove(mob/living/carbon/organ_owner, special = FALSE)
 	. = ..()
 
 	organ_owner.log_message("'s [src] was removed from [organ_owner]", LOG_GAME)
@@ -166,12 +166,13 @@
 
 	if(linked_mob)
 		UnregisterSignal(linked_mob, COMSIG_LIVING_DEATH, PROC_REF(damage_on_death))
+	linked_mob = null
 
-	QDEL_LIST(loaded_nifsofts)
+	QDEL_LAZYLIST(loaded_nifsofts)
 
 ///Installs preinstalled NIFSofts
 /obj/item/organ/cyberimp/brain/nif/proc/install_preinstalled_nifsofts()
-	if(!preinstalled_nifsofts)
+	if(!preinstalled_nifsofts || !linked_mob || calibrating)
 		return FALSE
 
 	for(var/datum/nifsoft/preinstalled_nifsoft as anything in preinstalled_nifsofts)
@@ -200,7 +201,7 @@
 		toggle_blood_drain(TRUE)
 
 	if(blood_drain)
-		linked_mob.blood_volume -= blood_drain_rate
+		linked_mob.adjust_blood_volume(-blood_drain_rate)
 
 	if(power_usage > power_level)
 		for(var/datum/nifsoft/nifsoft as anything in loaded_nifsofts)
@@ -264,15 +265,15 @@
 	if(!blood_drain)
 		power_usage += (blood_drain_rate * blood_conversion_rate)
 
-		balloon_alert(linked_mob, "Blood draining disabled")
+		balloon_alert(linked_mob, "blood draining disabled")
 		return
 
 	power_usage -= (blood_drain_rate * blood_conversion_rate)
-	balloon_alert(linked_mob, "Blood draining enabled")
+	balloon_alert(linked_mob, "blood draining enabled")
 
 ///Checks if the NIF is able to draw blood as a power source?
 /obj/item/organ/cyberimp/brain/nif/proc/blood_check()
-	if(!linked_mob || !linked_mob.blood_volume || (linked_mob.blood_volume <= minimum_blood_level))
+	if(!linked_mob || !linked_mob.get_blood_volume() || (linked_mob.get_blood_volume() <= minimum_blood_level))
 		return FALSE
 
 	return TRUE
@@ -299,7 +300,7 @@
 					linked_mob.adjust_disgust(25)
 				if(2)
 					to_chat(linked_mob, span_warning("You feel a wave of fatigue roll over you!"))
-					linked_mob.adjustStaminaLoss(50)
+					linked_mob.adjust_stamina_loss(50)
 
 		if(NIF_CALIBRATION_STAGE_FINISHED to INFINITY)
 			send_message("The calibration process is complete.")
@@ -315,7 +316,7 @@
 	if(broken || calibrating) //NIFSofts can't be installed to a broken NIF
 		return FALSE
 
-	if(length(loaded_nifsofts) >= max_nifsofts)
+	if(LAZYLEN(loaded_nifsofts) >= max_nifsofts)
 		send_message("You cannot install any additional NIFSofts, please uninstall one to make room!", alert = TRUE)
 		return FALSE
 
@@ -332,7 +333,7 @@
 			send_message("[current_nifsoft] is preventing [loaded_nifsoft] from being installed.", TRUE)
 			return FALSE
 
-	loaded_nifsofts += loaded_nifsoft
+	LAZYADD(loaded_nifsofts, loaded_nifsoft)
 	loaded_nifsoft.parent_nif = WEAKREF(src)
 	loaded_nifsoft.linked_mob = linked_mob
 	rewards_points += (loaded_nifsoft.rewards_points_rate * loaded_nifsoft.purchase_price)
@@ -370,7 +371,7 @@
 
 ///Sends a message to the owner of the NIF. Typically used for messages from the NIF itself or from NIFSofts.
 /obj/item/organ/cyberimp/brain/nif/proc/send_message(message_to_send, alert = FALSE)
-	var/datum/asset/spritesheet/sheet = get_asset_datum(/datum/asset/spritesheet/chat)
+	var/datum/asset/spritesheet/sheet = get_asset_datum(/datum/asset/spritesheet_batched/chat)
 	var/tag = sheet.icon_tag("nif-[chat_icon]")
 	var/nif_icon = ""
 
@@ -407,7 +408,7 @@
 	. = ..()
 	if(!owner || . & EMP_PROTECT_SELF)
 		return
-	var/added_stun_duration = 200/severity // the previous stun duration added by the parent call
+	var/added_stun_duration = 20 SECONDS / severity // the previous stun duration added by the parent call
 	owner.AdjustStun(-added_stun_duration) // we want to negate that stun here
 	to_chat(owner, span_warning("You feel a stinging pain in your head!"))
 	if(!durability_loss_vulnerable)
@@ -487,10 +488,10 @@
 
 	return FALSE
 
-/datum/asset/spritesheet/chat/create_spritesheets()
+/datum/asset/spritesheet_batched/chat/create_spritesheets()
 	. = ..()
 
-	InsertAll("nif", 'modular_nova/modules/modular_implants/icons/chat.dmi')
+	insert_all_icons("nif", 'modular_nova/modules/modular_implants/icons/chat.dmi')
 
 /obj/item/autosurgeon/organ/nif
 	starting_organ = /obj/item/organ/cyberimp/brain/nif/standard
@@ -515,7 +516,7 @@
 	new /obj/item/disk/nifsoft_uploader/dorms(src)
 	new /obj/item/disk/nifsoft_uploader/dorms/hypnosis(src)
 	new /obj/item/disk/nifsoft_uploader/soulcatcher(src)
-	new /obj/item/disk/nifsoft_uploader/money_sense(src)
+	new /obj/item/disk/nifsoft_uploader/job/money_sense(src)
 
 /obj/item/storage/box/nif_ghost_box/ghost_role/PopulateContents()
 	. = ..()

@@ -25,17 +25,6 @@
 #define TURRET_THREAT_SEVERE 8
 #define TURRET_THREAT_PRIORITY 10
 
-DEFINE_BITFIELD(turret_flags, list(
-	"TURRET_FLAG_SHOOT_ALL_REACT" = TURRET_FLAG_SHOOT_ALL_REACT,
-	"TURRET_FLAG_AUTH_WEAPONS" = TURRET_FLAG_AUTH_WEAPONS,
-	"TURRET_FLAG_SHOOT_CRIMINALS" = TURRET_FLAG_SHOOT_CRIMINALS,
-	"TURRET_FLAG_SHOOT_ALL" = TURRET_FLAG_SHOOT_ALL,
-	"TURRET_FLAG_SHOOT_ANOMALOUS" = TURRET_FLAG_SHOOT_ANOMALOUS,
-	"TURRET_FLAG_SHOOT_UNSHIELDED" = TURRET_FLAG_SHOOT_UNSHIELDED,
-	"TURRET_FLAG_SHOOT_BORGS" = TURRET_FLAG_SHOOT_BORGS,
-	"TURRET_FLAG_SHOOT_HEADS" = TURRET_FLAG_SHOOT_HEADS,
-))
-
 ////// Toolbox Handling //////
 /obj/item/storage/toolbox/emergency/turret/mag_fed
 	name = "mag-fed turret kit"
@@ -103,9 +92,8 @@ DEFINE_BITFIELD(turret_flags, list(
 	return yoink
 
 /obj/item/storage/toolbox/emergency/turret/mag_fed/set_faction(obj/machinery/porta_turret/syndicate/toolbox/mag_fed/turret, mob/user)
-	if(!(user.faction in turret.faction))
-		turret.faction += user.faction
-		turret.allies += REF(user)
+	if(!turret.faction_check_atom(user))
+		APPLY_FACTION_AND_ALLIES_FROM(turret, user)
 
 /obj/item/storage/toolbox/emergency/turret/mag_fed/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
 	if(!is_type_in_list(tool, list(/obj/item/wrench, /obj/item/screwdriver, /obj/item/multitool, /obj/item/toy/crayon/spraycan)))
@@ -151,7 +139,7 @@ DEFINE_BITFIELD(turret_flags, list(
 		playsound(src, 'sound/items/tools/drill_use.ogg', 80, TRUE, -1)
 		deploy_turret(user, loc)
 		return ITEM_INTERACT_SUCCESS
-	..()
+	return ..()
 
 /obj/item/storage/toolbox/emergency/turret/mag_fed/attack_self(mob/user, modifiers)
 	if(!easy_deploy)
@@ -356,13 +344,11 @@ DEFINE_BITFIELD(turret_flags, list(
 	////// Can this turret load more than one ammunition type. Mostly for sound handling. Might be more important if used in a rework.
 	var/adjustable_magwell = TRUE
 	////// Does this turret auto-eject its magazines? Will be used later.
-	var/auto_mag_drop = FALSE
+	var/mag_drop_collect = FALSE
 	//////This is for manual target acquisition stuff. If present, should immediately over-ride as a target.
 	var/datum/weakref/target_override
 	//////Target Assessment System. Whether or not it's targeting according to flags or even ignoring everyone.
 	var/target_assessment = TURRET_FLAG_SHOOT_EVERYONE
-	//////Ally system.
-	var/allies = list()
 	//////Do we want this to shut up? Mostly for testing and debugging purposes purposes.
 	var/claptrap_moment = TRUE
 	////// Do we want it to eject casings?
@@ -406,6 +392,8 @@ DEFINE_BITFIELD(turret_flags, list(
 	if(!mag_box) //If we want to make map-spawned turrets in turret form.
 		var/auto_loader = new mag_box_type
 		mag_box = WEAKREF(auto_loader)
+	if(!raised)
+		INVOKE_ASYNC(src, PROC_REF(popUp))
 	register_context()
 
 /obj/machinery/porta_turret/syndicate/toolbox/mag_fed/update_greyscale()
@@ -446,7 +434,7 @@ DEFINE_BITFIELD(turret_flags, list(
 	. = ..()
 	. -= span_notice("You can repair it by <b>left-clicking</b> with a combat wrench.")
 	. -= span_notice("You can fold it by <b>right-clicking</b> with a combat wrench.")
-	if((user.faction in faction) || (REF(user) in allies))
+	if(FAST_FACTION_CHECK(faction, user.get_faction(), null, null, FALSE) || has_ally(user))
 		. += span_notice("You can unlock it by <b>left-clicking</b> with an <b>id card.</b>")
 		. += span_notice("You can repair it by <b>left-clicking</b> with a <b>wrench.</b>")
 		. += span_notice("You can fold it by <b>right-clicking</b> with a <b>wrench.</b>")
@@ -556,7 +544,7 @@ DEFINE_BITFIELD(turret_flags, list(
 	if(magazine_ref)
 		var/obj/item/ammo_box/magazine/mag = magazine_ref?.resolve()
 		if(istype(mag))
-			if(auto_mag_drop)
+			if(mag_drop_collect)
 				var/obj/item/storage/toolbox/emergency/turret/mag_fed/auto_loader = mag_box?.resolve()
 				auto_loader.atom_storage?.attempt_insert(mag, override = TRUE)
 				UnregisterSignal(magazine_ref, COMSIG_MOVABLE_MOVED)
@@ -574,7 +562,6 @@ DEFINE_BITFIELD(turret_flags, list(
 	if(!auto_loader.get_mag())
 		balloon_alert_to_viewers("magazine well empty!") // hey, this is actually important info to convey.
 		toggle_on(FALSE) // I know i added the shupt-up toggle after adding this, This is just to prevent rapid proccing
-		timer_id = addtimer(CALLBACK(src, PROC_REF(toggle_on), TRUE), 5 SECONDS, TIMER_STOPPABLE)
 		return
 	magazine_ref = WEAKREF(auto_loader.get_mag(FALSE))
 	var/obj/item/ammo_box/magazine/get_that_mag = magazine_ref?.resolve()
@@ -609,6 +596,7 @@ DEFINE_BITFIELD(turret_flags, list(
 		return
 	balloon_alert(guy_with_mag, "magazine inserted!")
 	auto_loader?.atom_storage.attempt_insert(magaroni, guy_with_mag, TRUE)
+	toggle_on(TRUE)
 	return
 
 ////// I rewrite/add to the entire proccess. //////
@@ -681,25 +669,19 @@ DEFINE_BITFIELD(turret_flags, list(
 
 /obj/machinery/porta_turret/syndicate/toolbox/mag_fed/in_faction(mob/target)
 	if(!faction_targeting)
-		if(REF(target) in allies)
-			return TRUE
-		else
-			return FALSE
+		return has_ally(target)
 
-	for(var/faction1 in faction)
-		if((faction1 in target.faction) || (REF(target) in allies)) // For an Ally System
-			return TRUE
-	return FALSE
+	return FAST_FACTION_CHECK(faction, target.get_faction(), allies, target.allies, FALSE)
+
 
 /// toggles between whether things are inside the ally system
 /obj/machinery/porta_turret/syndicate/toolbox/mag_fed/proc/toggle_ally(mob/living/target) //leave these since it's kinda important to know which is being done.
-	if(REF(target) in allies)
-		allies -= REF(target)
+	if(remove_ally(target))
 		balloon_alert_to_viewers("ally removed!")
 		return
 	else
-		allies += REF(target)
-		balloon_alert_to_viewers("ally designated!")
+		if(add_ally(target))
+			balloon_alert_to_viewers("ally designated!")
 		return
 
 /obj/machinery/porta_turret/syndicate/toolbox/mag_fed/target(atom/movable/target)
@@ -709,7 +691,6 @@ DEFINE_BITFIELD(turret_flags, list(
 			return TRUE
 
 	if(target)
-		popUp() //pop the turret up if it's not already up.
 		setDir(get_dir(base, target))//even if you can't shoot, follow the target
 		shootAt(target)
 		return TRUE
@@ -798,12 +779,12 @@ DEFINE_BITFIELD(turret_flags, list(
 /obj/machinery/porta_turret/syndicate/toolbox/mag_fed/proc/handle_firing(obj/item/ammo_casing/casing, atom/movable/target)
 	var/obj/projectile/our_projectile = casing.loaded_projectile
 	if(ignore_faction)
-		our_projectile.ignored_factions = (faction + allies)
+		APPLY_FACTION_AND_ALLIES_FROM(our_projectile, src)
 	our_projectile.damage *= turret_damage_multiplier
 	our_projectile.stamina *= turret_damage_multiplier
 
 	our_projectile.wound_bonus += turret_wound_bonus
-	our_projectile.bare_wound_bonus += turret_wound_bonus
+	our_projectile.exposed_wound_bonus += turret_wound_bonus
 	casing.fire_casing(target, src, null, null, null, BODY_ZONE_CHEST, 0, src)
 	play_fire_sound(casing)
 
@@ -833,7 +814,7 @@ DEFINE_BITFIELD(turret_flags, list(
 
 ////// Operation Handling //////
 
-/obj/machinery/porta_turret/syndicate/toolbox/mag_fed/attackby(obj/item/attacking_item, mob/living/user, params) // This hasn't been changed upstream yet.
+/obj/machinery/porta_turret/syndicate/toolbox/mag_fed/attackby(obj/item/attacking_item, mob/user, list/modifiers, list/attack_modifiers) // This hasn't been changed upstream yet.
 	var/obj/item/storage/toolbox/emergency/turret/mag_fed/auto_loader = mag_box?.resolve()
 	if(isnull(auto_loader))
 		mag_box = null
@@ -887,7 +868,7 @@ DEFINE_BITFIELD(turret_flags, list(
 		if(!claptrap_moment)
 			balloon_alert(user, "repaired!")
 
-/obj/machinery/porta_turret/syndicate/toolbox/mag_fed/attackby_secondary(obj/item/attacking_item, mob/living/user, params) //IM TIRED OF MISMATCHED VAR NAMES. IT'S ATTACK_ITEM ON MAIN, WHY WEAPON HERE?
+/obj/machinery/porta_turret/syndicate/toolbox/mag_fed/attackby_secondary(obj/item/attacking_item, mob/user, list/modifiers, list/attack_modifiers) //IM TIRED OF MISMATCHED VAR NAMES. IT'S ATTACK_ITEM ON MAIN, WHY WEAPON HERE?
 	. = ..()
 	if(. == SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN)
 		return

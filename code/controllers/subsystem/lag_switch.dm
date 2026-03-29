@@ -1,7 +1,7 @@
 /// The subsystem for controlling drastic performance enhancements aimed at reducing server load for a smoother albeit slightly duller gaming experience
 SUBSYSTEM_DEF(lag_switch)
 	name = "Lag Switch"
-	flags = SS_NO_FIRE
+	ss_flags = SS_NO_FIRE
 
 	/// If the lag switch measures should attempt to trigger automatically, TRUE if a config value exists
 	var/auto_switch = FALSE
@@ -34,7 +34,7 @@ SUBSYSTEM_DEF(lag_switch)
 	auto_switch = FALSE
 	UnregisterSignal(SSdcs, COMSIG_GLOB_CLIENT_CONNECT)
 	veto_timer_id = addtimer(CALLBACK(src, PROC_REF(set_all_measures), TRUE, TRUE), 20 SECONDS, TIMER_STOPPABLE)
-	message_admins("Lag Switch population threshold reached. Automatic activation of lag mitigation measures occuring in 20 seconds. (<a href='?_src_=holder;[HrefToken()];change_lag_switch_option=CANCEL'>CANCEL</a>)")
+	message_admins("Lag Switch population threshold reached. Automatic activation of lag mitigation measures occuring in 20 seconds. (<a href='byond://?_src_=holder;[HrefToken()];change_lag_switch_option=CANCEL'>CANCEL</a>)")
 	log_admin("Lag Switch population threshold reached. Automatic activation of lag mitigation measures occuring in 20 seconds.")
 
 /// (En/Dis)able automatic triggering of switches based on client count

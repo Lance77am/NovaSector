@@ -42,9 +42,18 @@
 	SSaugury.register_doom(src, threat)
 	SpinAnimation()
 	chase_target(target)
+	AddComponent(
+		/datum/component/meteor_combat, \
+		CALLBACK(src, PROC_REF(redirect)), \
+		CALLBACK(src, PROC_REF(make_debris)), \
+		achievement_on = !istype(src, /obj/effect/meteor/sand), \
+	)
 
 /obj/effect/meteor/Destroy()
 	GLOB.meteor_list -= src
+	var/datum/move_loop/moveloop = GLOB.move_manager.processing_on(src, SSmovement)
+	if (!isnull(moveloop))
+		UnregisterSignal(moveloop, COMSIG_MOVELOOP_STOP)
 	return ..()
 
 /obj/effect/meteor/Moved(atom/old_loc, movement_dir, forced, list/old_locs, momentum_change = TRUE)
@@ -76,8 +85,13 @@
 	if(!isatom(chasing))
 		return
 	var/datum/move_loop/new_loop = GLOB.move_manager.move_towards(src, chasing, delay, home, lifetime)
-	if(!new_loop)
-		return
+	if(new_loop)
+		RegisterSignal(new_loop, COMSIG_MOVELOOP_STOP, PROC_REF(on_loop_stopped))
+
+/obj/effect/meteor/proc/on_loop_stopped(datum/source)
+	SIGNAL_HANDLER
+	if(!move_packet || !length(move_packet.existing_loops))
+		qdel(src)
 
 ///Deals with what happens when we stop moving, IE we die
 /obj/effect/meteor/proc/moved_off_z()
@@ -109,14 +123,14 @@
 /obj/effect/meteor/examine(mob/user)
 	. = ..()
 
+	if((user.mind?.get_skill_level(/datum/skill/athletics) >= SKILL_LEVEL_LEGENDARY))
+		. += span_notice("On second thought, it doesn't look too tough.")
 	check_examine_award(user)
 
-/obj/effect/meteor/attackby(obj/item/I, mob/user, params)
-	if(I.tool_behaviour == TOOL_MINING)
-		make_debris()
-		qdel(src)
-	else
-		. = ..()
+///Called by component/meteor_combat to send us moving to the edge of the map away from whoever punched us
+/obj/effect/meteor/proc/redirect(mob/athlete)
+	dest = spaceDebrisStartLoc(get_cardinal_dir(athlete, src), z)
+	chase_target(dest)
 
 /obj/effect/meteor/proc/make_debris()
 	for(var/throws = dropamt, throws > 0, throws--)
@@ -151,6 +165,7 @@
 /obj/effect/meteor/proc/check_examine_award(mob/user)
 	if(!(flags_1 & ADMIN_SPAWNED_1) && isliving(user))
 		user.client.give_award(/datum/award/achievement/misc/meteor_examine, user)
+
 
 /**
  * Handles the meteor's interaction with meteor shields.
@@ -233,7 +248,7 @@
 //Flaming meteor
 /obj/effect/meteor/flaming
 	name = "flaming meteor"
-	desc = "An veritable shooting star, both beautiful and frightening. You should probably keep your distance from this."
+	desc = "A veritable shooting star, both beautiful and frightening. You should probably keep your distance from this."
 	icon_state = "flaming"
 	hits = 5
 	heavy = TRUE
@@ -349,7 +364,7 @@
 
 /obj/effect/meteor/banana/ram_turf(turf/bumped)
 	for(var/mob/living/slipped in get_turf(bumped))
-		slipped.slip(100, slipped.loc,- GALOSHES_DONT_HELP|SLIDE, 0, FALSE)
+		slipped.slip(100, slipped.loc,- GALOSHES_DONT_HELP|SLIDE)
 		slipped.visible_message(span_warning("[src] honks [slipped] to the floor!"), span_userdanger("[src] harmlessly passes through you, knocking you over."))
 	get_hit()
 
@@ -369,7 +384,7 @@
 /obj/effect/meteor/emp/meteor_effect()
 	..()
 	playsound(src, 'sound/items/weapons/zapbang.ogg', 100, TRUE, -1)
-	empulse(src, 3, 8)
+	empulse(src, 3, 8, emp_source = src)
 
 //Meaty Ore
 /obj/effect/meteor/meaty
@@ -422,7 +437,7 @@
 
 /obj/effect/meteor/meaty/xeno/ram_turf(turf/T)
 	if(!isspaceturf(T))
-		new /obj/effect/decal/cleanable/xenoblood(T)
+		new /obj/effect/decal/cleanable/blood/xeno(T)
 
 //Station buster Tunguska
 /obj/effect/meteor/tunguska

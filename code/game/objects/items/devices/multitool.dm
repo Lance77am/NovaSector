@@ -10,12 +10,13 @@
 
 
 
-/obj/item/multitool //NOVA EDIT - ICON OVERRIDDEN BY AESTHETICS - SEE MODULE
+/obj/item/multitool
 	name = "multitool"
 	desc = "Used for pulsing wires to test which to cut. Not recommended by doctors. You can activate it in-hand to locate the nearest APC."
-	icon = 'icons/obj/devices/tool.dmi'
+	icon = 'icons/obj/devices/tool.dmi' //NOVA EDIT - ICON OVERRIDDEN IN AESTHETICS MODULE
 	icon_state = "multitool"
 	inhand_icon_state = "multitool"
+	icon_angle = -90
 	lefthand_file = 'icons/mob/inhands/equipment/tools_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
 	force = 5
@@ -26,8 +27,11 @@
 	throw_speed = 3
 	drop_sound = 'sound/items/handling/tools/multitool_drop.ogg'
 	pickup_sound = 'sound/items/handling/tools/multitool_pickup.ogg'
-	custom_materials = list(/datum/material/iron= SMALL_MATERIAL_AMOUNT * 0.5, /datum/material/glass= SMALL_MATERIAL_AMOUNT * 0.2)
-	custom_premium_price = PAYCHECK_COMMAND * 3
+	custom_materials = list(
+		/datum/material/iron =SMALL_MATERIAL_AMOUNT * 0.5,
+		/datum/material/glass =SMALL_MATERIAL_AMOUNT * 0.2
+		)
+	custom_premium_price = PAYCHECK_CREW * 3
 	toolspeed = 1
 	usesound = 'sound/items/weapons/empty.ogg'
 	var/datum/buffer // simple machine buffer for device linkage
@@ -64,14 +68,47 @@
 	if(!COOLDOWN_FINISHED(src, next_apc_scan))
 		return
 
-	COOLDOWN_START(src, next_apc_scan, 1 SECONDS)
+	COOLDOWN_START(src, next_apc_scan, 2 SECONDS)
 
 	var/area/local_area = get_area(src)
-	var/power_controller = local_area.apc
-	if(power_controller)
-		user.balloon_alert(user, "[get_dist(src, power_controller)]m [dir2text(get_dir(src, power_controller))]")
-	else
+	var/obj/machinery/power/apc/power_controller = local_area.apc
+	if(!power_controller)
 		user.balloon_alert(user, "couldn't find apc!")
+		return
+
+	var/dist = get_dist(src, power_controller)
+	var/dir = get_dir(user, power_controller)
+	var/balloon_message
+	var/arrow_color
+
+	switch(dist)
+		if (0)
+			user.balloon_alert(user, "found apc!")
+			return
+		if(1 to 5)
+			arrow_color = COLOR_GREEN
+		if(6 to 10)
+			arrow_color = COLOR_YELLOW
+		if(11 to 15)
+			arrow_color = COLOR_ORANGE
+		else
+			arrow_color = COLOR_RED
+
+	user.balloon_alert(user, balloon_message)
+
+	var/datum/hud/user_hud = user.hud_used
+	if(!user_hud || !istype(user_hud, /datum/hud) || !islist(user_hud.infodisplay))
+		return
+
+	var/atom/movable/screen/multitool_arrow/arrow = new(null, user_hud)
+	arrow.color = arrow_color
+	arrow.screen_loc = around_player
+	arrow.transform = matrix(dir2angle(dir), MATRIX_ROTATE)
+
+	user_hud.infodisplay += arrow
+	user_hud.show_hud(user_hud.hud_version)
+
+	QDEL_IN(arrow, 1.5 SECONDS)
 
 /obj/item/multitool/suicide_act(mob/living/carbon/user)
 	user.visible_message(span_suicide("[user] puts the [src] to [user.p_their()] chest. It looks like [user.p_theyre()] trying to pulse [user.p_their()] heart off!"))
@@ -206,7 +243,7 @@
 	var/turf/our_turf = get_turf(src)
 	detect_state = PROXIMITY_NONE
 
-	for(var/mob/eye/ai_eye/AI_eye as anything in GLOB.aiEyes)
+	for(var/mob/eye/camera/ai/AI_eye in GLOB.camera_eyes)
 		if(!AI_eye.ai_detector_visible)
 			continue
 
@@ -255,7 +292,7 @@
 // copied from camera chunks but we are doing a really big edge case here though
 /obj/item/multitool/ai_detect/proc/surrounding_chunks(turf/epicenter)
 	. = list()
-	var/static_range = /mob/eye/ai_eye::static_visibility_range
+	var/static_range = /mob/eye/camera/ai::static_visibility_range
 	var/x1 = max(1, epicenter.x - static_range)
 	var/y1 = max(1, epicenter.y - static_range)
 	var/x2 = min(world.maxx, epicenter.x + static_range)
@@ -263,10 +300,10 @@
 
 	for(var/x = x1; x <= x2; x += CHUNK_SIZE)
 		for(var/y = y1; y <= y2; y += CHUNK_SIZE)
-			var/datum/camerachunk/chunk = GLOB.cameranet.getCameraChunk(x, y, epicenter.z)
+			var/datum/camerachunk/chunk = SScameras.generate_chunk(x, y, epicenter.z)
 			// removing cameras in build mode didnt affect it and i guess it needs an AI eye to update so we have to do this manually
 			// unless we only want to see static in a jank manner only if an eye updates it
-			chunk?.update() // UPDATE THE FUCK NOW
+			chunk?.force_update(only_if_necessary = FALSE) // UPDATE THE FUCK NOW
 			. |= chunk
 
 /obj/item/multitool/ai_detect/proc/cleanup_static()
@@ -285,7 +322,7 @@
 	desc = "An omni-technological interface."
 	icon = 'icons/obj/antags/abductor.dmi'
 	icon_state = "multitool"
-	belt_icon_state = "multitool_alien"
+	inside_belt_icon_state = "multitool_alien"
 	custom_materials = list(/datum/material/iron = SHEET_MATERIAL_AMOUNT * 2.5, /datum/material/silver = SHEET_MATERIAL_AMOUNT * 1.25, /datum/material/plasma = SHEET_MATERIAL_AMOUNT * 2.5, /datum/material/titanium = SHEET_MATERIAL_AMOUNT, /datum/material/diamond = SHEET_MATERIAL_AMOUNT)
 	toolspeed = 0.1
 
@@ -294,6 +331,7 @@
 	desc = "Optimised version of a regular multitool. Streamlines processes handled by its internal microchip."
 	icon = 'icons/obj/items_cyborg.dmi'
 	icon_state = "toolkit_engiborg_multitool"
+	icon_angle = 0
 	toolspeed = 0.5
 
 #undef PROXIMITY_NEAR

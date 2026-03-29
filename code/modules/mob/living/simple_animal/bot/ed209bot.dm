@@ -15,8 +15,10 @@
 
 	automated_announcements = list(ED209_VOICED_DOWN_WEAPONS = 'sound/mobs/non-humanoids/ed209/ed209_20sec.ogg')
 
+	custom_materials = list(/datum/material/iron = SHEET_MATERIAL_AMOUNT * 2.8, /datum/material/glass = SMALL_MATERIAL_AMOUNT * 2.1)
+
 	var/lastfired = 0
-	var/shot_delay = 15
+	var/shot_delay = 1.5 SECONDS
 	var/shoot_sound = 'sound/items/weapons/laser.ogg'
 	var/projectile = /obj/projectile/beam/disabler
 	var/fair_market_projectile = /obj/projectile/bullet/c38 // For shooting the worst scumbags of all: the poor
@@ -24,6 +26,12 @@
 /mob/living/simple_animal/bot/secbot/ed209/Initialize(mapload)
 	. = ..()
 	set_weapon() //giving it the right projectile and firing sound.
+
+	AddComponent(/datum/component/defaceable, \
+		icon = 'icons/mob/silicon/aibot_faces.dmi', \
+		icon_states = list("ed209" = FALSE, "ed209_highlight" = TRUE), \
+		drawing_of = "a face", \
+	)
 
 /mob/living/simple_animal/bot/secbot/ed209/bot_reset()
 	..()
@@ -86,7 +94,7 @@
 
 	var/obj/projectile/fired_bullet = new projectile(loc)
 	playsound(src, shoot_sound, 50, TRUE)
-	fired_bullet.preparePixelProjectile(target, src)
+	fired_bullet.aim_projectile(target, src)
 	fired_bullet.fire()
 
 /mob/living/simple_animal/bot/secbot/ed209/emp_act(severity)

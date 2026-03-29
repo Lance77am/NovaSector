@@ -8,7 +8,7 @@
 	desc = "<b>Left click</b> to coil/uncoil your powerful tail around something, <b>right click</b> to begin crushing."
 	check_flags = AB_CHECK_LYING|AB_CHECK_CONSCIOUS|AB_CHECK_INCAPACITATED|AB_CHECK_PHASED
 
-	button_icon = 'modular_nova/modules/taur_mechanics/sprites/ability.dmi'
+	button_icon = 'modular_nova/modules/taur_mechanics/icons/ability.dmi'
 	button_icon_state = "constrict"
 
 	ranged_mousepointer = 'icons/effects/mouse_pointers/supplypod_pickturf.dmi'
@@ -37,30 +37,29 @@
 		return FALSE
 	return TRUE
 
-/datum/action/innate/constrict/do_ability(mob/living/caller, atom/clicked_on)
+/datum/action/innate/constrict/do_ability(mob/living/clicker, atom/clicked_on)
 	if (!isliving(clicked_on))
 		if (tail)
 			qdel(tail)
 			return TRUE
 
-		create_tail()
-		return TRUE
+		return FALSE
 
 	var/mob/living/living_target = clicked_on
 
-	if (living_target == caller)
+	if (living_target == clicker)
 		return TRUE
 
 	if (!can_coil_target(living_target))
 		return TRUE
 
-	caller.balloon_alert_to_viewers("starts coiling tail")
-	caller.visible_message(span_warning("[caller] starts coiling [caller.p_their()] tail around [living_target]..."), span_notice("You start coiling your tail around [living_target]..."), ignored_mobs = list(living_target))
-	to_chat(living_target, span_userdanger("[caller] starts coiling [caller.p_their()] tail around you!"))
+	clicker.balloon_alert_to_viewers("starts coiling tail")
+	clicker.visible_message(span_warning("[clicker] starts coiling [clicker.p_their()] tail around [living_target]..."), span_notice("You start coiling your tail around [living_target]..."), ignored_mobs = list(living_target))
+	to_chat(living_target, span_userdanger("[clicker] starts coiling [clicker.p_their()] tail around you!"))
 
 	owner.changeNext_move(base_coil_delay) // prevent interaction during this
 	unset_ranged_ability(owner) // because we sleep
-	var/result = do_after(caller, base_coil_delay, living_target, IGNORE_HELD_ITEM, extra_checks = CALLBACK(src, PROC_REF(can_coil_target), living_target))
+	var/result = do_after(clicker, base_coil_delay, living_target, IGNORE_HELD_ITEM, extra_checks = CALLBACK(src, PROC_REF(can_coil_target), living_target))
 	owner.changeNext_move(-base_coil_delay)
 	if (!result)
 		return TRUE
@@ -125,7 +124,7 @@
 	name = "serpentine tail"
 	desc = "A scaley tail, currently coiled."
 
-	icon = 'modular_nova/modules/taur_mechanics/sprites/tail.dmi'
+	icon = 'modular_nova/modules/taur_mechanics/icons/tail.dmi'
 	icon_state = "naga"
 	pixel_x = -16
 
@@ -190,7 +189,7 @@
 	if (tail_overlay)
 		return tail_overlay // we already have it
 
-	tail_overlay = mutable_appearance('modular_nova/modules/taur_mechanics/sprites/tail.dmi', "naga_top", ABOVE_MOB_LAYER + 0.01, src)
+	tail_overlay = mutable_appearance('modular_nova/modules/taur_mechanics/icons/tail.dmi', "naga_top", ABOVE_MOB_LAYER + 0.01, src)
 	tail_overlay.appearance_flags = TILE_BOUND|PIXEL_SCALE|KEEP_TOGETHER
 	tail_overlay.setDir(owner.dir)
 	add_overlay(tail_overlay)
@@ -214,8 +213,9 @@
 /obj/structure/serpentine_tail/proc/sync_sprite()
 	//coloring
 	var/list/finished_list = list()
-	var/list/color_list = owner.dna.species.mutant_bodyparts["taur"][MUTANT_INDEX_COLOR_LIST] //identify color
-	var/datum/sprite_accessory/sprite_type = SSaccessories.sprite_accessories["taur"][owner.dna.species.mutant_bodyparts["taur"][MUTANT_INDEX_NAME]] //identify type
+	var/datum/mutant_bodypart/taur_body = owner.dna.mutant_bodyparts[FEATURE_TAUR]
+	var/list/color_list = taur_body.get_colors() //identify color
+	var/datum/sprite_accessory/sprite_type = SSaccessories.sprite_accessories[FEATURE_TAUR][taur_body.name] //identify type
 
 	switch(sprite_type.color_src)
 		if(USE_MATRIXED_COLORS)
@@ -643,7 +643,7 @@
 	name = "Constricted"
 	desc = "You're being constricted by a giant tail! You can resist, attack the tail, or attack the constrictor to escape!"
 
-	icon = 'modular_nova/modules/taur_mechanics/sprites/ability.dmi'
+	icon = 'modular_nova/modules/taur_mechanics/icons/ability.dmi'
 	icon_state = "constrict"
 
 #undef CONSTRICT_BASE_PIXEL_SHIFT
